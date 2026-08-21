@@ -1,0 +1,50 @@
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Datasets & Sample Data
+*.csv
+*.tsv
+*.xlsx
+*.parquet
+
+# Generated Pipeline Data, Runs, & Databases
+data/
+*.db
+*.sqlite3
+
+# Model Binaries & Checkpoints
+*.joblib
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.pth
+*.onnx
+
+# Generated EDA Plots & Visualizations
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
