@@ -2,61 +2,40 @@
 
 @layer base {
   :root {
-    --background: #E5DDD0;
-    --foreground: #1C1917;
-    --palette-ochre: #CA651B;
-    --palette-gold: #FAC61B;
-    --palette-teal: #08979D;
-    --palette-rust: #B83E16;
-    --palette-card: #FAF6F0;
-    --palette-border: #C8BCAB;
-    --palette-subtle: #DDD4C5;
+    --background: #DCEEE3;
+    --foreground: #0F2922;
+    --green-bg: #DCEEE3;
+    --green-surface: #EAF5EE;
+    --green-card: #EAF5EE;
+    --green-sidebar: #D4EADC;
+    --green-border: #A3C9B2;
+    --green-inner: #CCE5D6;
+    --forest-primary: #059669;
+    --forest-hover: #047857;
+    --forest-dark: #064E3B;
+    --forest-text: #0F2922;
+    --forest-muted: #2D5245;
   }
 }
 
 body {
-  background-color: #E5DDD0;
-  color: #1C1917;
+  background-color: #DCEEE3;
+  color: #0F2922;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Custom scrollbars */
+/* Custom Light Green Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #DDD4C5;
+  background: #CCE5D6;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C8BCAB;
+  background: #A3C9B2;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #CA651B;
-}
-
-/* Palette Gradient Utilities */
-.bg-amber-gold-gradient {
-  background: linear-gradient(135deg, #CA651B 0%, #FAC61B 100%);
-}
-
-.bg-teal-gradient {
-  background: linear-gradient(135deg, #08979D 0%, #066F74 100%);
-}
-
-.bg-rust-amber-gradient {
-  background: linear-gradient(135deg, #B83E16 0%, #CA651B 100%);
-}
-
-.text-amber-gradient {
-  background: linear-gradient(135deg, #B83E16 0%, #CA651B 50%, #FAC61B 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-teal-gradient {
-  background: linear-gradient(135deg, #066F74 0%, #08979D 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: #059669;
 }

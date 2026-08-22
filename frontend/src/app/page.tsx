@@ -103,14 +103,14 @@ export default function DashboardPage() {
     switch (status) {
       case "done":
         return (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-[#08979D] bg-[#08979D]/15 border border-[#08979D]/30 px-3 py-1 rounded-full shadow-2xs">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#08979D]" />
+          <span className="flex items-center gap-1.5 text-xs font-bold text-[#047857] bg-[#D1FAE5] border border-[#059669]/40 px-3 py-1 rounded-full shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
             Completed
           </span>
         );
       case "failed":
         return (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-[#B83E16] bg-[#B83E16]/15 border border-[#B83E16]/30 px-3 py-1 rounded-full">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-[#BE123C] bg-[#FFE4E6] border border-[#BE123C]/30 px-3 py-1 rounded-full">
             <XCircle className="w-3.5 h-3.5" />
             Failed
           </span>
@@ -118,8 +118,8 @@ export default function DashboardPage() {
       case "running":
       case "pending":
         return (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-[#CA651B] bg-[#FAC61B]/30 border border-[#FAC61B]/60 px-3 py-1 rounded-full animate-pulse">
-            <Hourglass className="w-3.5 h-3.5 animate-spin text-[#CA651B]" />
+          <span className="flex items-center gap-1.5 text-xs font-bold text-[#059669] bg-[#D1FAE5] border border-[#059669]/50 px-3 py-1 rounded-full animate-pulse">
+            <Hourglass className="w-3.5 h-3.5 animate-spin text-[#059669]" />
             Processing
           </span>
         );
@@ -129,7 +129,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#E5DDD0] text-[#1C1917] overflow-hidden antialiased font-sans">
+    <div className="flex h-screen bg-[#DCEEE3] text-[#0F2922] overflow-hidden antialiased font-sans">
       {/* Left Sidebar */}
       <Sidebar
         runs={runs}
@@ -144,19 +144,19 @@ export default function DashboardPage() {
       />
 
       {/* Main Workspace */}
-      <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-[#E6DED4] via-[#DDD4C7] to-[#E3DBD0]">
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-[#DCEEE3]">
         {/* Backend Connectivity Banner */}
         {apiUnreachable && (
-          <div className="bg-[#B83E16]/15 border-b border-[#B83E16]/30 p-3 px-6 flex items-center justify-between text-xs text-[#B83E16]">
+          <div className="bg-[#FFE4E6] border-b border-[#BE123C]/20 p-3 px-6 flex items-center justify-between text-xs text-[#BE123C]">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-[#B83E16]" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#BE123C]" />
               <span>
-                Cannot reach FastAPI server at <strong className="font-bold text-[#1C1917]">http://127.0.0.1:8000</strong>. Ensure the backend is active.
+                Cannot reach FastAPI server at <strong className="font-bold text-[#0F2922]">http://127.0.0.1:8000</strong>. Ensure the backend is active.
               </span>
             </div>
             <button
               onClick={fetchAllRuns}
-              className="text-xs underline hover:text-[#1C1917] font-bold cursor-pointer"
+              className="text-xs underline hover:text-[#0F2922] font-bold cursor-pointer"
             >
               Retry Connection
             </button>
@@ -168,31 +168,31 @@ export default function DashboardPage() {
         ) : (
           <div className="p-6 md:p-8 max-w-6xl w-full mx-auto space-y-6">
             {/* Header / Active Run Meta */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#C8BCAB]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#A3C9B2]">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[#FAF6F0] border border-[#C8BCAB] text-[#CA651B] shadow-2xs">
+                  <div className="p-2.5 rounded-xl bg-[#EAF5EE] border border-[#A3C9B2] text-[#059669] shadow-2xs">
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-3">
-                      <h1 className="text-xl font-bold text-[#1C1917] tracking-tight">
+                      <h1 className="text-xl font-bold text-[#0F2922] tracking-tight">
                         {activeRun.csv_filename}
                       </h1>
                       {getStatusBadge(activeRun.status)}
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-[#574E47] pl-12">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[#2D5245] pl-12">
                   <span>
-                    Target: <strong className="text-[#CA651B] font-bold">{activeRun.target_column}</strong>
+                    Target: <strong className="text-[#059669] font-bold">{activeRun.target_column}</strong>
                   </span>
-                  <span className="text-[#C8BCAB]">•</span>
+                  <span className="text-[#A3C9B2]">•</span>
                   <span>
-                    Problem: <strong className="text-[#1C1917] font-semibold capitalize">{activeRun.problem_type}</strong>
+                    Problem: <strong className="text-[#0F2922] font-semibold capitalize">{activeRun.problem_type}</strong>
                   </span>
-                  <span className="text-[#C8BCAB]">•</span>
-                  <span className="font-mono text-[11px] text-[#786F68]">ID: {activeRun.run_id}</span>
+                  <span className="text-[#A3C9B2]">•</span>
+                  <span className="font-mono text-[11px] text-[#487364]">ID: {activeRun.run_id}</span>
                 </div>
               </div>
             </div>
@@ -213,17 +213,17 @@ export default function DashboardPage() {
               />
             )}
 
-            {/* Tab Navigation */}
-            <div className="flex items-center gap-2 border-b border-[#C8BCAB]">
+            {/* Tab Navigation with Light Green Surfaces */}
+            <div className="flex items-center gap-2 border-b border-[#A3C9B2]">
               <button
                 onClick={() => setActiveTab("overview")}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
                   activeTab === "overview"
-                    ? "border-[#CA651B] text-[#CA651B] bg-[#FAF6F0] shadow-2xs"
-                    : "border-transparent text-[#574E47] hover:text-[#1C1917] hover:bg-[#FAF6F0]/60"
+                    ? "border-[#059669] text-[#059669] bg-[#EAF5EE] shadow-2xs"
+                    : "border-transparent text-[#2D5245] hover:text-[#0F2922] hover:bg-[#EAF5EE]/60"
                 }`}
               >
-                <BarChart3 className="w-4 h-4 text-[#CA651B]" />
+                <BarChart3 className="w-4 h-4 text-[#059669]" />
                 Performance Overview
               </button>
 
@@ -231,11 +231,11 @@ export default function DashboardPage() {
                 onClick={() => setActiveTab("eda")}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
                   activeTab === "eda"
-                    ? "border-[#CA651B] text-[#CA651B] bg-[#FAF6F0] shadow-2xs"
-                    : "border-transparent text-[#574E47] hover:text-[#1C1917] hover:bg-[#FAF6F0]/60"
+                    ? "border-[#059669] text-[#059669] bg-[#EAF5EE] shadow-2xs"
+                    : "border-transparent text-[#2D5245] hover:text-[#0F2922] hover:bg-[#EAF5EE]/60"
                 }`}
               >
-                <ImageIcon className="w-4 h-4 text-[#08979D]" />
+                <ImageIcon className="w-4 h-4 text-[#059669]" />
                 EDA Heatmaps & Plots
               </button>
 
@@ -243,11 +243,11 @@ export default function DashboardPage() {
                 onClick={() => setActiveTab("shap")}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
                   activeTab === "shap"
-                    ? "border-[#CA651B] text-[#CA651B] bg-[#FAF6F0] shadow-2xs"
-                    : "border-transparent text-[#574E47] hover:text-[#1C1917] hover:bg-[#FAF6F0]/60"
+                    ? "border-[#059669] text-[#059669] bg-[#EAF5EE] shadow-2xs"
+                    : "border-transparent text-[#2D5245] hover:text-[#0F2922] hover:bg-[#EAF5EE]/60"
                 }`}
               >
-                <Sparkles className="w-4 h-4 text-[#FAC61B]" />
+                <Sparkles className="w-4 h-4 text-[#059669]" />
                 SHAP Explainability
               </button>
 
@@ -255,11 +255,11 @@ export default function DashboardPage() {
                 onClick={() => setActiveTab("artifacts")}
                 className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
                   activeTab === "artifacts"
-                    ? "border-[#CA651B] text-[#CA651B] bg-[#FAF6F0] shadow-2xs"
-                    : "border-transparent text-[#574E47] hover:text-[#1C1917] hover:bg-[#FAF6F0]/60"
+                    ? "border-[#059669] text-[#059669] bg-[#EAF5EE] shadow-2xs"
+                    : "border-transparent text-[#2D5245] hover:text-[#0F2922] hover:bg-[#EAF5EE]/60"
                 }`}
               >
-                <Download className="w-4 h-4 text-[#B83E16]" />
+                <Download className="w-4 h-4 text-[#059669]" />
                 Artifact Downloads
               </button>
             </div>
