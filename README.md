@@ -1,15 +1,6 @@
-# 🤖 Autonomous Multi-Agent Data Analyzer & AutoML Pipeline
+# Autonomous Multi-Agent Data Analyzer & AutoML Pipeline
 
 > An end-to-end autonomous data science engine orchestrating specialized LLM agents using **LangGraph**, **Groq**, **Optuna**, **Scikit-Learn**, and **SHAP** with self-healing sandboxed execution, an asynchronous **FastAPI** backend, and a reactive **Streamlit** dashboard.
-
-[![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat&logo=python)](https://www.python.org/)
-[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph%200.2%2B-orange.svg?style=flat)](https://github.com/langchain-ai/langgraph)
-[![LangChain](https://img.shields.io/badge/Framework-LangChain%200.3%2B-1C3C3C.svg?style=flat)](https://www.langchain.com/)
-[![LLM Backend](https://img.shields.io/badge/LLM-Groq%20%2F%20Llama--3-F55036.svg?style=flat)](https://groq.com/)
-[![Optuna](https://img.shields.io/badge/Tuning-Optuna%203.5%2B-007ACC.svg?style=flat)](https://optuna.org/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.111%2B-009688.svg?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Streamlit](https://img.shields.io/badge/Frontend-Streamlit%201.35%2B-FF4B4B.svg?style=flat&logo=streamlit)](https://streamlit.io/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 
 ---
 
