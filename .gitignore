@@ -48,3 +48,12 @@ data/
 .idea/
 *.swp
 *.swo
+
+# Node & Frontend Build Artifacts
+node_modules/
+.next/
+out/
+build/
+.turbo/
+*.tsbuildinfo
+

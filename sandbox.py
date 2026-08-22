@@ -30,8 +30,10 @@ from __future__ import annotations
 import copy
 import io
 import os
+import shutil
 import traceback
 import contextlib
+from pathlib import Path
 from typing import Any, Dict, Optional, TypedDict, List
 
 
@@ -258,6 +260,28 @@ def execute_agent_code(code: str, state: DataScientistState) -> Dict[str, Any]:
 
         merged_state: DataScientistState = copy.deepcopy(working_state)
         merged_state.update(final_updates)  # type: ignore[typeddict-item]
+
+        # Sync generated artifacts to run folder if csv_path is in a run directory
+        csv_p = merged_state.get("csv_path")
+        if csv_p:
+            run_dir = Path(csv_p).parent
+            if "runs" in str(run_dir) and run_dir.is_dir():
+                for p in merged_state.get("eda_plot_paths") or []:
+                    f_name = Path(p).name
+                    if Path(f_name).is_file() and Path(f_name).resolve() != (run_dir / f_name).resolve():
+                        try:
+                            shutil.copy2(Path(f_name), run_dir / f_name)
+                        except Exception:
+                            pass
+                for field in ("shap_plot_path", "cleaned_csv_path", "model_path"):
+                    val = merged_state.get(field)
+                    if val:
+                        f_name = Path(val).name
+                        if Path(f_name).is_file() and Path(f_name).resolve() != (run_dir / f_name).resolve():
+                            try:
+                                shutil.copy2(Path(f_name), run_dir / f_name)
+                            except Exception:
+                                pass
 
         return {
             "ok": True,
