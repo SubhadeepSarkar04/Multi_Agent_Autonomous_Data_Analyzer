@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import { ThemeProvider } from "../lib/ThemeContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,8 +13,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "AutoML Co-Pilot | Autonomous Multi-Agent Data Analyzer",
+  title: "AutoML Studio | Autonomous Multi-Agent Data Scientist",
   description: "End-to-end multi-agent automated machine learning and data analysis system.",
 };
 
@@ -23,11 +29,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-[#DCEEE3] text-[#0F2922] min-h-screen antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} bg-[#081d18] text-[#f4f3ee] min-h-screen antialiased selection:bg-[#eb5e41] selection:text-white transition-colors duration-200`}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import React from "react";
 import { CheckCircle2, Loader2, XCircle, CircleDashed, Database, Sparkles, Sliders, LineChart } from "lucide-react";
 import { RunStatus } from "../lib/types";
+import { useTheme } from "../lib/ThemeContext";
 
 interface PipelineStepperProps {
   lastAgent?: string | null;
@@ -18,6 +19,9 @@ const AGENTS = [
 ];
 
 export default function PipelineStepper({ lastAgent, overallStatus, retryCount = 0 }: PipelineStepperProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   const getAgentStatus = (agentId: string) => {
     if (!lastAgent) {
       if (agentId === AGENTS[0].id && (overallStatus === "running" || overallStatus === "pending")) {
@@ -45,27 +49,56 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
   };
 
   return (
-    <div className="bg-[#EAF5EE] border border-[#A3C9B2] rounded-2xl p-4 md:p-5 shadow-xs">
+    <div className={`border rounded-2xl p-4 md:p-5 shadow-md transition-colors ${
+      isDark
+        ? "bg-[#12382f] border-[#1e4e42]"
+        : "bg-white border-slate-200 shadow-sm"
+    }`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-bold text-[#0F2922] tracking-tight">Multi-Agent Workflow Pipeline</h2>
-          <p className="text-xs text-[#2D5245]">Autonomous collaboration across 4 specialized agent nodes</p>
+          <h2 className={`text-base font-bold tracking-tight flex items-center gap-2 font-serif-display ${
+            isDark ? "text-[#f4f3ee]" : "text-slate-900"
+          }`}>
+            Multi-Agent Workflow Pipeline
+            <span className={`text-[10px] font-sans font-medium px-2 py-0.5 rounded-full border ${
+              isDark
+                ? "bg-[#174337] text-[#eb5e41] border-[#286253]"
+                : "bg-orange-50 text-[#eb5e41] border-orange-200"
+            }`}>
+              Autonomous DAG
+            </span>
+          </h2>
+          <p className={`text-xs mt-0.5 ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+            Collaborative execution across 4 specialized AI agent nodes
+          </p>
         </div>
         {overallStatus === "running" && (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-[#059669] bg-[#D1FAE5] border border-[#059669]/40 px-3 py-1 rounded-full animate-pulse">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#059669]" />
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full animate-pulse shadow-sm border ${
+            isDark
+              ? "text-[#eb5e41] bg-[#174337] border-[#eb5e41]/60"
+              : "text-[#eb5e41] bg-orange-50 border-orange-200"
+          }`}>
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#eb5e41]" />
             Execution Active
           </span>
         )}
         {overallStatus === "done" && (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-[#047857] bg-[#D1FAE5] border border-[#059669]/40 px-3 py-1 rounded-full">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${
+            isDark
+              ? "text-[#34d399] bg-[#0f2e26] border-[#34d399]/40"
+              : "text-emerald-700 bg-emerald-50 border border-emerald-200"
+          }`}>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399]" />
             Pipeline Completed
           </span>
         )}
         {overallStatus === "failed" && (
-          <span className="flex items-center gap-1.5 text-xs font-bold text-[#BE123C] bg-[#FFE4E6] border border-[#BE123C]/30 px-3 py-1 rounded-full">
-            <XCircle className="w-3.5 h-3.5" />
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${
+            isDark
+              ? "text-[#f87171] bg-[#2d1215] border-[#7f1d1d]/60"
+              : "text-rose-700 bg-rose-50 border border-rose-200"
+          }`}>
+            <XCircle className="w-3.5 h-3.5 text-[#f87171]" />
             Stage Failed ({retryCount} retries)
           </span>
         )}
@@ -81,12 +114,20 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
               key={agent.id}
               className={`relative p-4 rounded-xl border transition-all flex flex-col justify-between ${
                 status === "running"
-                  ? "bg-[#D1FAE5] border-[#059669] shadow-2xs"
+                  ? isDark
+                    ? "bg-[#174337] border-[#eb5e41] shadow-[0_0_15px_rgba(235,94,65,0.2)] ring-1 ring-[#eb5e41]/50"
+                    : "bg-orange-50/70 border-[#eb5e41] ring-1 ring-[#eb5e41]/40"
                   : status === "done"
-                  ? "bg-[#E2F2E7] border-[#059669]/40 shadow-2xs"
+                  ? isDark
+                    ? "bg-[#103027] border-[#1e4e42]"
+                    : "bg-slate-50 border-slate-200"
                   : status === "failed"
-                  ? "bg-[#FFE4E6] border-[#BE123C]/30 shadow-2xs"
-                  : "bg-[#DCEEE3] border-[#A3C9B2] opacity-80"
+                  ? isDark
+                    ? "bg-[#281316] border-[#7f1d1d]/60"
+                    : "bg-rose-50 border-rose-200"
+                  : isDark
+                  ? "bg-[#0d2822] border-[#1e4e42]/60 opacity-75"
+                  : "bg-slate-50/40 border-slate-200 opacity-60"
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -94,30 +135,34 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
                   <div
                     className={`p-1.5 rounded-lg ${
                       status === "running"
-                        ? "bg-[#A3E5C0] text-[#047857]"
+                        ? "bg-[#eb5e41] text-white shadow-sm"
                         : status === "done"
-                        ? "bg-[#D1FAE5] text-[#059669]"
+                        ? isDark ? "bg-[#174337] text-[#34d399]" : "bg-emerald-100 text-emerald-700"
                         : status === "failed"
-                        ? "bg-[#FFE4E6] text-[#BE123C]"
-                        : "bg-[#CCE5D6] text-[#2D5245]"
+                        ? isDark ? "bg-[#3f161a] text-[#f87171]" : "bg-rose-100 text-rose-700"
+                        : isDark ? "bg-[#174337] text-[#6b9386]" : "bg-slate-200 text-slate-500"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
-                  <span className="text-[11px] font-bold text-[#059669]">Step 0{index + 1}</span>
+                  <span className="text-[11px] font-bold text-[#eb5e41]">Step 0{index + 1}</span>
                 </div>
 
                 <div>
-                  {status === "done" && <CheckCircle2 className="w-4 h-4 text-[#059669]" />}
-                  {status === "running" && <Loader2 className="w-4 h-4 text-[#059669] animate-spin" />}
-                  {status === "failed" && <XCircle className="w-4 h-4 text-[#BE123C]" />}
-                  {status === "waiting" && <CircleDashed className="w-4 h-4 text-[#5A8775]" />}
+                  {status === "done" && <CheckCircle2 className="w-4 h-4 text-[#34d399]" />}
+                  {status === "running" && <Loader2 className="w-4 h-4 text-[#eb5e41] animate-spin" />}
+                  {status === "failed" && <XCircle className="w-4 h-4 text-[#f87171]" />}
+                  {status === "waiting" && <CircleDashed className={`w-4 h-4 ${isDark ? "text-[#3d695d]" : "text-slate-300"}`} />}
                 </div>
               </div>
 
               <div>
-                <h3 className="text-xs font-bold text-[#0F2922]">{agent.label}</h3>
-                <p className="text-[11px] text-[#2D5245] mt-0.5 leading-snug">{agent.desc}</p>
+                <h3 className={`text-xs font-bold ${isDark ? "text-[#f4f3ee]" : "text-slate-900"}`}>
+                  {agent.label}
+                </h3>
+                <p className={`text-[11px] mt-0.5 leading-snug ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+                  {agent.desc}
+                </p>
               </div>
             </div>
           );

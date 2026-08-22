@@ -2,6 +2,7 @@
 
 import React from "react";
 import { TrendingUp, Award, Zap, SlidersHorizontal, BarChart3 } from "lucide-react";
+import { useTheme } from "../lib/ThemeContext";
 
 interface MetricsDashboardProps {
   metrics?: Record<string, any> | null;
@@ -9,11 +10,18 @@ interface MetricsDashboardProps {
 }
 
 export default function MetricsDashboard({ metrics, problemType }: MetricsDashboardProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
   if (!metrics || Object.keys(metrics).length === 0) {
     return (
-      <div className="p-8 text-center bg-[#EAF5EE] border border-[#A3C9B2] rounded-2xl shadow-xs">
-        <BarChart3 className="w-8 h-8 mx-auto text-[#059669] mb-2 opacity-80" />
-        <p className="text-sm text-[#2D5245]">Metrics are being calculated by the Tuner agent...</p>
+      <div className={`p-8 text-center border rounded-2xl shadow-md transition-colors ${
+        isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200"
+      }`}>
+        <BarChart3 className="w-8 h-8 mx-auto text-[#eb5e41] mb-2 opacity-80" />
+        <p className={`text-sm font-medium ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+          Metrics are being calculated by the Tuner agent...
+        </p>
       </div>
     );
   }
@@ -45,76 +53,133 @@ export default function MetricsDashboard({ metrics, problemType }: MetricsDashbo
       {/* Metric KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Baseline Card */}
-        <div className="bg-[#EAF5EE] border border-[#A3C9B2] rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+        <div className={`border rounded-2xl p-5 shadow-md flex flex-col justify-between transition-colors ${
+          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200 shadow-sm"
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#2D5245]">Baseline Model</span>
-            <div className="p-2 rounded-xl bg-[#DCEEE3] border border-[#A3C9B2] text-[#059669]">
+            <span className={`text-xs font-bold uppercase tracking-wider ${
+              isDark ? "text-[#6b9386]" : "text-slate-400"
+            }`}>
+              Baseline Model
+            </span>
+            <div className={`p-2 rounded-xl border ${
+              isDark ? "bg-[#174337] text-[#98bbaf] border-[#1e4e42]" : "bg-slate-100 text-slate-600 border-slate-200"
+            }`}>
               <Zap className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-[#0F2922]">
+            <div className={`text-3xl font-extrabold tracking-tight font-serif-display ${
+              isDark ? "text-[#f4f3ee]" : "text-slate-900"
+            }`}>
               {baselineScore !== null ? baselineScore.toFixed(4) : "N/A"}
             </div>
-            <p className="text-xs text-[#2D5245] mt-1 font-semibold">Default Hyperparameters</p>
+            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+              Default Hyperparameters
+            </p>
           </div>
         </div>
 
         {/* Tuned Champion Card */}
-        <div className="bg-[#D8F2E2] border-2 border-[#059669] rounded-2xl p-5 shadow-xs flex flex-col justify-between relative overflow-hidden">
+        <div className={`border-2 border-[#eb5e41] rounded-2xl p-5 shadow-lg flex flex-col justify-between relative overflow-hidden transition-colors ${
+          isDark
+            ? "bg-[#174337] shadow-[0_0_20px_rgba(235,94,65,0.15)]"
+            : "bg-orange-50/60 shadow-[0_4px_18px_rgba(235,94,65,0.12)]"
+        }`}>
           <div className="flex items-center justify-between relative z-10">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#059669]">Tuned Champion</span>
-            <div className="p-2 rounded-xl bg-[#059669] text-white shadow-2xs">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#eb5e41] flex items-center gap-1.5 font-sans">
+              <Award className="w-3.5 h-3.5 text-[#eb5e41]" />
+              Tuned Champion
+            </span>
+            <div className="p-2 rounded-xl bg-[#eb5e41] text-white shadow-md shadow-[#eb5e41]/30">
               <Award className="w-4 h-4 fill-current text-white" />
             </div>
           </div>
           <div className="mt-4 relative z-10">
-            <div className="text-2xl font-bold text-[#064E3B]">
+            <div className="text-3xl font-extrabold text-[#eb5e41] tracking-tight font-serif-display">
               {tunedScore !== null ? tunedScore.toFixed(4) : "N/A"}
             </div>
-            <p className="text-xs text-[#059669] mt-1 font-bold">Optuna Optimized Score</p>
+            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#f4f3ee]" : "text-slate-700"}`}>
+              Optuna Bayesian Optimized Score
+            </p>
           </div>
         </div>
 
         {/* Performance Delta Card */}
-        <div className="bg-[#EAF5EE] border border-[#A3C9B2] rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+        <div className={`border rounded-2xl p-5 shadow-md flex flex-col justify-between transition-colors ${
+          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200 shadow-sm"
+        }`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#2D5245]">Optimization Gain</span>
-            <div className="p-2 rounded-xl bg-[#D1FAE5] text-[#059669]">
+            <span className={`text-xs font-bold uppercase tracking-wider ${
+              isDark ? "text-[#6b9386]" : "text-slate-400"
+            }`}>
+              Optimization Gain
+            </span>
+            <div className={`p-2 rounded-xl border ${
+              isDark ? "bg-[#0f2e26] border-[#34d399]/30 text-[#34d399]" : "bg-emerald-50 border-emerald-200 text-emerald-600"
+            }`}>
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className={`text-2xl font-bold ${deltaPct && deltaPct >= 0 ? "text-[#059669]" : "text-[#0F2922]"}`}>
+            <div className={`text-3xl font-extrabold tracking-tight font-serif-display ${
+              deltaPct && deltaPct >= 0
+                ? "text-[#34d399]"
+                : isDark ? "text-[#f4f3ee]" : "text-slate-900"
+            }`}>
               {deltaPct !== null ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(2)}%` : "N/A"}
             </div>
-            <p className="text-xs text-[#2D5245] mt-1 font-semibold">Relative Improvement</p>
+            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+              Relative Model Improvement
+            </p>
           </div>
         </div>
       </div>
 
       {/* Best Hyperparameters Table */}
       {bestParams && Object.keys(bestParams).length > 0 && (
-        <div className="bg-[#EAF5EE] border border-[#A3C9B2] rounded-2xl p-5 shadow-xs">
+        <div className={`border rounded-2xl p-5 shadow-md transition-colors ${
+          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200 shadow-sm"
+        }`}>
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-1.5 rounded-lg bg-[#D1FAE5] text-[#059669]">
+            <div className={`p-1.5 rounded-lg border ${
+              isDark ? "bg-[#174337] text-[#eb5e41] border-[#1e4e42]" : "bg-orange-50 text-[#eb5e41] border-orange-200"
+            }`}>
               <SlidersHorizontal className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-[#0F2922]">Best Hyperparameters Discovered</h3>
+            <h3 className={`text-sm font-bold font-serif-display text-base ${
+              isDark ? "text-[#f4f3ee]" : "text-slate-900"
+            }`}>
+              Best Hyperparameters Discovered
+            </h3>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-[#A3C9B2]">
+          <div className={`overflow-x-auto rounded-xl border ${
+            isDark ? "border-[#1e4e42]" : "border-slate-200"
+          }`}>
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-[#A3C9B2] text-[#0F2922] bg-[#DCEEE3]">
+                <tr className={`border-b ${
+                  isDark
+                    ? "border-[#1e4e42] text-[#98bbaf] bg-[#0d2822]"
+                    : "border-slate-200 text-slate-600 bg-slate-50"
+                }`}>
                   <th className="py-2.5 px-3.5 font-bold">Parameter</th>
                   <th className="py-2.5 px-3.5 font-bold">Tuned Value</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#A3C9B2] text-[#0F2922]">
+              <tbody className={`divide-y ${
+                isDark
+                  ? "divide-[#1e4e42] text-[#f4f3ee]"
+                  : "divide-slate-100 text-slate-800"
+              }`}>
                 {Object.entries(bestParams).map(([k, v]) => (
-                  <tr key={k} className="hover:bg-[#DCEEE3]/60 transition">
-                    <td className="py-2.5 px-3.5 font-mono text-[#0F2922] font-semibold">{k}</td>
-                    <td className="py-2.5 px-3.5 font-mono text-[#059669] font-bold">
+                  <tr key={k} className={`transition ${
+                    isDark ? "hover:bg-[#174337]/60" : "hover:bg-slate-50"
+                  }`}>
+                    <td className={`py-2.5 px-3.5 font-mono font-medium ${
+                      isDark ? "text-[#98bbaf]" : "text-slate-600"
+                    }`}>{k}</td>
+                    <td className="py-2.5 px-3.5 font-mono text-[#eb5e41] font-bold">
                       {typeof v === "object" ? JSON.stringify(v) : String(v)}
                     </td>
                   </tr>
