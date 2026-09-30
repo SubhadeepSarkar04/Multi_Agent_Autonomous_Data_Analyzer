@@ -1,6 +1,6 @@
 # Autonomous Multi-Agent Data Analyzer & AutoML Pipeline
 
-> An end-to-end autonomous data science engine orchestrating specialized LLM agents using **LangGraph**, **Groq**, **Optuna**, **Scikit-Learn**, and **SHAP** with self-healing sandboxed execution, an asynchronous **FastAPI** backend, and a reactive **Streamlit** dashboard.
+> An end-to-end autonomous data science engine orchestrating specialized LLM agents using **LangGraph**, **Groq**, **Optuna**, **Scikit-Learn**, and **SHAP** with self-healing sandboxed execution, an asynchronous **Django** backend, and reactive **Next.js** and **Streamlit** user interfaces.
 
 ---
 
@@ -13,7 +13,7 @@
 - [Repository Structure](#-repository-structure)
 - [Installation & Setup](#-installation--setup)
 - [How to Run](#-how-to-run)
-  - [1. Web Interface (FastAPI + Streamlit)](#1-web-interface-fastapi--streamlit)
+  - [1. Web Interfaces (Django + Next.js / Streamlit)](#1-web-interfaces-django--nextjs--streamlit)
   - [2. CLI Execution (`main.py`)](#2-cli-execution-mainpy)
   - [3. REST API Endpoints](#3-rest-api-endpoints)
 - [Robustness & Sandboxed Self-Healing](#-robustness--sandboxed-self-healing)
@@ -69,8 +69,9 @@ flowchart TD
 
     subgraph Storage & Serving
         EndNode --> SQLite[("💾 SQLite Registry (data/runs.db)")]
-        SQLite --> FastAPI["⚡ FastAPI Async Server (:8000)"]
-        FastAPI --> Streamlit["💻 Streamlit Dashboard (:8501)"]
+        SQLite --> Django["⚡ Django Backend Server (:8000)"]
+        Django --> NextJS["🌐 Next.js Dashboard (:3000)"]
+        Django --> Streamlit["💻 Streamlit App (:8501)"]
     end
 ```
 
@@ -94,13 +95,13 @@ Each agent generates structured `<thought>` and `<code>` blocks:
 - **🔄 Self-Healing Code Execution**: If agent-generated Python code throws an exception, the traceback is captured and injected back into the agent's prompt for dynamic self-correction (up to 3 retries per node).
 - **🛡️ Isolated Sandbox Environment**: Code executes in a sandbox with deep-copied state rollbacks on errors, headless `plt.show()` trapping (forcing `plt.savefig`), and safe namespace scoping.
 - **⚡ Background Pipeline Execution**: Runs are executed in decoupled background worker threads with streaming state updates, preventing UI blocking.
-- **📊 Real-time Streamlit Dashboard**: 
-  - 4-stage live stepper visualizer.
+- **📊 Real-time Next.js & Streamlit Frontends**: 
+  - Live pipeline progress and agent lifecycle tracking.
   - Interactive metric cards and data previews.
-  - Tabbed visual galleries for EDA and SHAP plots.
+  - Visual galleries for EDA distributions, correlations, and SHAP feature importance plots.
   - One-click downloads for cleaned datasets and trained `.joblib` champion models.
-  - Persistent run history sidebar powered by SQLite.
-- **🚀 Production REST API**: FastAPI backend with OpenAPI documentation (`/docs`), artifact streaming, and run monitoring endpoints.
+  - Persistent run history and artifact isolation powered by SQLite.
+- **🚀 Django REST API**: Unified backend with CORS support, thread-safe execution controllers (pause, resume, stop, rerun), sandbox code execution endpoint, and file streaming.
 
 ---
 
@@ -112,8 +113,12 @@ multi_agent_autonomous_data_analyzer/
 ├── .gitignore              # Strict ignore rules (excludes models, data, runs, cache)
 ├── requirements.txt        # Core project dependencies
 │
+├── manage.py               # Django management script
+├── backend_project/        # Django project configuration (settings, urls, wsgi, asgi)
+├── api/                    # Django API application (views, urls)
+│
 ├── state_schema.py         # DataScientistState TypedDict and constants
-├── llm_provider.py         # LLM factory (Groq, OpenAI, Anthropic abstraction)
+├── llm_provider.py         # LLM factory (Groq, Ollama abstraction)
 ├── parsing.py              # Robust parser for <thought> and <code> XML blocks
 ├── sandbox.py              # Isolated execution runtime with state rollback & safeguards
 │
@@ -122,8 +127,8 @@ multi_agent_autonomous_data_analyzer/
 │
 ├── database.py             # SQLite persistence layer for run metadata & artifacts
 ├── main.py                 # CLI entry point for headless batch runs
-├── api_server.py           # FastAPI HTTP backend exposing pipeline & artifacts
-└── streamlit_app.py        # Interactive Streamlit frontend UI
+├── frontend/               # Next.js frontend application
+└── streamlit_app.py        # Streamlit frontend dashboard
 ```
 
 ---
@@ -132,7 +137,8 @@ multi_agent_autonomous_data_analyzer/
 
 ### Prerequisites
 - **Python 3.10+**
-- A **Groq API Key** (or OpenAI / Anthropic key depending on your provider)
+- **Node.js 18+** (optional, for Next.js frontend)
+- A **Groq API Key** (or local Ollama)
 
 ### 1. Clone the Repository
 ```bash
@@ -168,21 +174,44 @@ $env:GROQ_API_KEY="your-groq-api-key-here"
 export GROQ_API_KEY="your-groq-api-key-here"
 ```
 
+### Security defaults
+
+The API is intended for trusted local development. By default it accepts CORS
+requests from local Streamlit and Next.js development servers, limits CSV
+uploads to 50 MB, and disables the custom-code endpoint.
+
+Set these only when appropriate for your deployment:
+
+```bash
+MAX_UPLOAD_BYTES=52428800
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:8501,http://127.0.0.1:8501
+ENABLE_CUSTOM_CODE_EXECUTION=1  # trusted local debugging only
+```
+
 ---
 
 ## 🚀 How to Run
 
-### 1. Web Interface (FastAPI + Streamlit)
+### 1. Web Interfaces (Django + Next.js / Streamlit)
 
-For the full interactive visual experience, start both the backend API and the frontend dashboard.
+Start the Django backend and whichever frontend interface you prefer:
 
-#### **Terminal 1: Start FastAPI Backend**
+#### **Terminal 1: Start Django Backend**
 ```bash
-uvicorn api_server:api --reload --port 8000
+python manage.py runserver 8000
 ```
-*API will run at `http://127.0.0.1:8000` (Swagger docs available at `http://127.0.0.1:8000/docs`).*
+*API runs at `http://127.0.0.1:8000`.*
 
-#### **Terminal 2: Start Streamlit Dashboard**
+#### **Terminal 2: Start Frontend**
+
+**Option A: Next.js Frontend (Modern UI)**
+```bash
+cd frontend
+npm run dev
+```
+*Dashboard will open at `http://localhost:3000`.*
+
+**Option B: Streamlit Dashboard**
 ```bash
 streamlit run streamlit_app.py
 ```
@@ -196,7 +225,7 @@ Run the complete pipeline directly from your terminal:
 
 ```bash
 # Classification Example
-python main.py --csv_path path/to/dataset.csv --target Survived --type classification
+python main.py --csv_path Titanic-Dataset.csv --target Survived --type classification
 
 # Regression Example
 python main.py --csv_path path/to/housing.csv --target MedHouseVal --type regression
@@ -210,51 +239,31 @@ You can trigger and monitor runs programmatically:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/run` | Upload dataset CSV and trigger pipeline in the background |
+| `POST` | `/run` | Upload dataset CSV and trigger pipeline in the background (HTTP 202) |
 | `GET` | `/runs` | List all past runs and their current statuses |
-| `GET` | `/runs/{run_id}/status` | Retrieve status, active agent, metrics, and error tracebacks |
-| `GET` | `/runs/{run_id}/artifacts/{filename}` | Download generated artifacts (`.png`, cleaned `.csv`) |
-| `GET` | `/runs/{run_id}/model` | Binary download of `champion_model.joblib` |
+| `GET` | `/runs/{run_id}/status` | Poll current stage, metrics, logs, and error status |
+| `GET` | `/runs/{run_id}/artifacts/{filename}` | Download generated artifacts (EDA plots, cleaned CSV) |
+| `GET` | `/runs/{run_id}/model` | Binary download of serialized champion `.joblib` model |
+| `POST` | `/runs/{run_id}/pause` | Pause active execution |
+| `POST` | `/runs/{run_id}/resume` | Resume paused pipeline |
+| `POST` | `/runs/{run_id}/stop` | Stop / abort execution |
+| `POST` | `/runs/{run_id}/rerun` | Re-execute pipeline from scratch |
+| `POST` | `/runs/{run_id}/execute_code` | Execute custom code in sandbox (if enabled) |
+| `DELETE` | `/runs/{run_id}` | Delete a run and its isolated artifacts |
+| `DELETE` | `/runs` | Clear all analysis history |
 
 ---
 
 ## 🛡️ Robustness & Sandboxed Self-Healing
 
-The execution engine in [`sandbox.py`](sandbox.py) includes multi-layer safeguards:
+The execution engine uses sandbox safeguards:
 
-1. **Deep State Immutability**: Pipeline state is deep-copied before executing any agent-generated script. If an unhandled exception occurs, state changes are discarded and the untouched pre-execution state is preserved.
-2. **Headless Plot Trapping**: `plt.show()` is monkey-patched to raise a runtime exception, enforcing agents to persist plots via `plt.savefig()` into the run directory.
-3. **AST & Syntax Validation**: Code syntax and tags (`<thought>...</thought>`, `<code>...</code>`) are validated before execution.
-4. **Automated Error Feedback**: When a stage fails, its `error_traceback` and previous code are fed back to the LLM on the next retry attempt to self-correct logic errors.
-
----
-
-## 🧩 Configuration & LLM Providers
-
-LLM models are managed in [`llm_provider.py`](llm_provider.py). By default, the system uses Groq for high-speed agent inference:
-
-```python
-from llm_provider import get_llm
-
-# Default: Groq
-llm = get_llm(provider="groq", model_name="openai/gpt-oss-120b")
-```
-
-You can customize the provider by setting `provider="openai"` or `provider="anthropic"` in [`llm_provider.py`](llm_provider.py).
+1. **State Snapshots**: Before agent code executes, the pipeline state is deeply copied. If an error occurs, the state is rolled back.
+2. **Headless Plot Trapping**: Prevents GUI plot popups in headless servers, redirecting `plt.show()` to `plt.savefig()`.
+3. **Multi-turn LLM Reflection**: When code execution fails, error tracebacks are fed back to the LLM agent to analyze and self-correct.
 
 ---
 
-## 🤝 Contributing
+## 📄 License
 
-Contributions are welcome! To contribute:
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
----
-
-## 📜 License
-
-Distributed under the **MIT License**. See `LICENSE` for more information.
+This project is licensed under the MIT License.

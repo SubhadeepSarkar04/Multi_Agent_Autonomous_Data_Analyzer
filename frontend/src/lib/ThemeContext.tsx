@@ -12,19 +12,19 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "dark",
-  resolvedTheme: "dark",
+  theme: "light",
+  resolvedTheme: "light",
   setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>("dark");
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("dark");
+  const [theme, setThemeState] = useState<ThemeMode>("light");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Read saved theme from localStorage or default to dark
-    const saved = (localStorage.getItem("automl_theme") as ThemeMode) || "dark";
+    // Read saved theme from localStorage or default to light (Soft Cream Organic)
+    const saved = (localStorage.getItem("automl_theme") as ThemeMode) || "light";
     setThemeState(saved);
     setMounted(true);
   }, []);

@@ -364,22 +364,29 @@ READ-ONLY INPUTS AVAILABLE TO YOUR CODE:
   - cleaned_csv_path (str)
   - target_column    (str)
 
-YOUR TASK:
+YOUR TASK (High-Performance Explainer):
   1. Load the model from model_path with joblib.load(...) and the dataset from cleaned_csv_path with pd.read_csv(...).
   2. Prepare numeric feature sample (drop target_column):
      - `X = df.drop(columns=[target_column], errors='ignore')`
      - `X_numeric = X.select_dtypes(include=[np.number])`
-     - Cap at max 100 rows: `X_sample = X_numeric.sample(n=min(100, len(X_numeric)), random_state=42)`
-  3. Compute SHAP values:
-     - `explainer = shap.TreeExplainer(model)` (or `shap.Explainer(model, X_sample)`)
-     - Always pass `check_additivity=False` to prevent tree rounding errors: `shap_values = explainer.shap_values(X_sample, check_additivity=False)`
-     - If binary classification where `shap_values` is a list of 2 arrays, select the positive class: `shap_values = shap_values[1]`.
+     - Fast subsample (max 50 rows for instant evaluation): `X_sample = X_numeric.sample(n=min(50, len(X_numeric)), random_state=42)`
+  3. Compute SHAP values with optimized TreeExplainer:
+     - Extract underlying tree estimator if model is wrapped in a pipeline:
+       `estimator = model.named_steps.get('classifier', model.named_steps.get('regressor', model)) if hasattr(model, 'named_steps') else model`
+     - Try fast TreeExplainer first:
+       `try:`
+       `    explainer = shap.TreeExplainer(estimator)`
+       `    shap_values = explainer.shap_values(X_sample, check_additivity=False)`
+       `except Exception:`
+       `    explainer = shap.Explainer(estimator, shap.kmeans(X_sample, min(10, len(X_sample))))`
+       `    shap_values = explainer(X_sample).values`
+     - If binary classification where `shap_values` is a list of 2 arrays, select the positive class: `if isinstance(shap_values, list) and len(shap_values) == 2: shap_values = shap_values[1]`
      - If `shap_values` is an Explanation object (has `.values`), use `shap_values = shap_values.values`.
-  4. Generate and save a clean, well-proportioned summary plot:
+  4. Generate and save a clean summary plot (top 15 features):
      `plt.figure(figsize=(10, 6))`
-     `shap.summary_plot(shap_values, X_sample, show=False)`
+     `shap.summary_plot(shap_values, X_sample, max_display=15, show=False)`
      `plt.tight_layout()`
-     `plt.savefig('shap_summary_plot.png', dpi=150, bbox_inches='tight')`
+     `plt.savefig('shap_summary_plot.png', dpi=100, bbox_inches='tight')`
      `plt.close('all')`
   5. Set `state_updates['shap_plot_path'] = 'shap_summary_plot.png'`.
 
@@ -391,7 +398,7 @@ Brief reasoning about explainer choice. LOG-ONLY: recorded for audit purposes, n
 
 ```python
 # Executable Python code. It must mutate state_updates directly.
-# Your SHAP background sample MUST be capped at 100 rows, maximum.
+# Background sample MUST be capped at 50 rows for high speed.
 ```
 
 Do not: compute SHAP values on the full dataset, call plt.show(), or return the raw shap_values array in state_updates (only the plot path is a valid output).

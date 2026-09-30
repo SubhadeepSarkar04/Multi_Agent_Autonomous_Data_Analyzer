@@ -1,6 +1,16 @@
 import { RunDetail, RunSummary } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+export function getApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined" && window.location && window.location.hostname) {
+    return `http://${window.location.hostname}:8000`;
+  }
+  return "http://127.0.0.1:8000";
+}
+
+export const API_BASE = getApiBase();
 
 export async function startRun(
   file: File,
@@ -12,7 +22,8 @@ export async function startRun(
   formData.append("target_column", targetColumn.trim());
   formData.append("problem_type", problemType);
 
-  const res = await fetch(`${API_BASE}/run`, {
+  const base = getApiBase();
+  const res = await fetch(`${base}/run`, {
     method: "POST",
     body: formData,
   });
@@ -27,7 +38,8 @@ export async function startRun(
 
 export async function getRuns(): Promise<RunSummary[]> {
   try {
-    const res = await fetch(`${API_BASE}/runs`, { cache: "no-store" });
+    const base = getApiBase();
+    const res = await fetch(`${base}/runs`, { cache: "no-store" });
     if (!res.ok) {
       return [];
     }
@@ -40,7 +52,8 @@ export async function getRuns(): Promise<RunSummary[]> {
 
 export async function getRunStatus(runId: string): Promise<RunDetail | null> {
   try {
-    const res = await fetch(`${API_BASE}/runs/${runId}/status`, { cache: "no-store" });
+    const base = getApiBase();
+    const res = await fetch(`${base}/runs/${runId}/status`, { cache: "no-store" });
     if (!res.ok) {
       return null;
     }
@@ -52,11 +65,102 @@ export async function getRunStatus(runId: string): Promise<RunDetail | null> {
 }
 
 export function getArtifactUrl(runId: string, filename: string): string {
-  // filename could be full path or just basename
   const cleanName = filename.split(/[\\/]/).pop() || filename;
-  return `${API_BASE}/runs/${runId}/artifacts/${cleanName}`;
+  const base = getApiBase();
+  return `${base}/runs/${runId}/artifacts/${cleanName}`;
 }
 
 export function getModelDownloadUrl(runId: string): string {
-  return `${API_BASE}/runs/${runId}/model`;
+  const base = getApiBase();
+  return `${base}/runs/${runId}/model`;
+}
+
+export async function pauseRun(runId: string): Promise<{ run_id: string; status: string; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs/${runId}/pause`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to pause run" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function resumeRun(runId: string): Promise<{ run_id: string; status: string; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs/${runId}/resume`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to resume run" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function rerunPipeline(runId: string): Promise<{ run_id: string; status: string; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs/${runId}/rerun`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to rerun pipeline" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function stopRun(runId: string): Promise<{ run_id: string; status: string; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs/${runId}/stop`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to stop run" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function executeCustomCode(
+  runId: string,
+  code: string,
+  agentName?: string
+): Promise<{ ok: boolean; stdout?: string; traceback?: string; updated_state?: any; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs/${runId}/execute_code`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, agent_name: agentName }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to execute code" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteRun(runId: string): Promise<{ ok: boolean; run_id: string; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs/${runId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to delete run" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteAllRuns(): Promise<{ ok: boolean; count: number; message: string }> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/runs`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to clear all runs" }));
+    throw new Error(err.detail || `Server error: ${res.status}`);
+  }
+  return res.json();
 }

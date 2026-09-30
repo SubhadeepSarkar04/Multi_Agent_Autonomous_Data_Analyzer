@@ -15,11 +15,11 @@ export default function MetricsDashboard({ metrics, problemType }: MetricsDashbo
 
   if (!metrics || Object.keys(metrics).length === 0) {
     return (
-      <div className={`p-8 text-center border rounded-2xl shadow-md transition-colors ${
-        isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200"
+      <div className={`p-8 text-center border rounded-xl transition-colors ${
+        isDark ? "bg-[#23221d] border-[#3c3931]" : "bg-white border-[#dcd5c9]"
       }`}>
-        <BarChart3 className="w-8 h-8 mx-auto text-[#eb5e41] mb-2 opacity-80" />
-        <p className={`text-sm font-medium ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+        <BarChart3 className="w-8 h-8 mx-auto text-[#658a60] mb-2" />
+        <p className={`text-sm font-medium ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
           Metrics are being calculated by the Tuner agent...
         </p>
       </div>
@@ -53,83 +53,83 @@ export default function MetricsDashboard({ metrics, problemType }: MetricsDashbo
       {/* Metric KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Baseline Card */}
-        <div className={`border rounded-2xl p-5 shadow-md flex flex-col justify-between transition-colors ${
-          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200 shadow-sm"
+        <div className={`border rounded-xl p-5 flex flex-col justify-between transition-colors ${
+          isDark ? "bg-[#23221d] border-[#3c3931]" : "bg-white border-[#dcd5c9]"
         }`}>
           <div className="flex items-center justify-between">
             <span className={`text-xs font-bold uppercase tracking-wider ${
-              isDark ? "text-[#6b9386]" : "text-slate-400"
+              isDark ? "text-[#9a9386]" : "text-[#756e63]"
             }`}>
               Baseline Model
             </span>
-            <div className={`p-2 rounded-xl border ${
-              isDark ? "bg-[#174337] text-[#98bbaf] border-[#1e4e42]" : "bg-slate-100 text-slate-600 border-slate-200"
+            <div className={`p-2 rounded-lg border ${
+              isDark ? "bg-[#181714] text-[#d5cec2] border-[#3c3931]" : "bg-[#f4efe6] text-[#4a453e] border-[#dcd5c9]"
             }`}>
               <Zap className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className={`text-3xl font-extrabold tracking-tight font-serif-display ${
-              isDark ? "text-[#f4f3ee]" : "text-slate-900"
+            <div className={`text-3xl font-extrabold tracking-tight ${
+              isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
             }`}>
               {baselineScore !== null ? baselineScore.toFixed(4) : "N/A"}
             </div>
-            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
               Default Hyperparameters
             </p>
           </div>
         </div>
 
         {/* Tuned Champion Card */}
-        <div className={`border-2 border-[#eb5e41] rounded-2xl p-5 shadow-lg flex flex-col justify-between relative overflow-hidden transition-colors ${
+        <div className={`border rounded-xl p-5 flex flex-col justify-between relative overflow-hidden transition-colors ${
           isDark
-            ? "bg-[#174337] shadow-[0_0_20px_rgba(235,94,65,0.15)]"
-            : "bg-orange-50/60 shadow-[0_4px_18px_rgba(235,94,65,0.12)]"
+            ? "bg-[#2a261e] border-[#d97706]/70 shadow-xs"
+            : "bg-[#fffdf8] border-[#d97706]/70 shadow-xs"
         }`}>
           <div className="flex items-center justify-between relative z-10">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#eb5e41] flex items-center gap-1.5 font-sans">
-              <Award className="w-3.5 h-3.5 text-[#eb5e41]" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#d97706] flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-[#d97706]" />
               Tuned Champion
             </span>
-            <div className="p-2 rounded-xl bg-[#eb5e41] text-white shadow-md shadow-[#eb5e41]/30">
+            <div className="p-2 rounded-lg bg-[#d97706] text-white shadow-xs">
               <Award className="w-4 h-4 fill-current text-white" />
             </div>
           </div>
           <div className="mt-4 relative z-10">
-            <div className="text-3xl font-extrabold text-[#eb5e41] tracking-tight font-serif-display">
+            <div className="text-3xl font-extrabold text-[#d97706] tracking-tight">
               {tunedScore !== null ? tunedScore.toFixed(4) : "N/A"}
             </div>
-            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#f4f3ee]" : "text-slate-700"}`}>
+            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#d5cec2]" : "text-[#4a453e]"}`}>
               Optuna Bayesian Optimized Score
             </p>
           </div>
         </div>
 
         {/* Performance Delta Card */}
-        <div className={`border rounded-2xl p-5 shadow-md flex flex-col justify-between transition-colors ${
-          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200 shadow-sm"
+        <div className={`border rounded-xl p-5 flex flex-col justify-between transition-colors ${
+          isDark ? "bg-[#23221d] border-[#3c3931]" : "bg-white border-[#dcd5c9]"
         }`}>
           <div className="flex items-center justify-between">
             <span className={`text-xs font-bold uppercase tracking-wider ${
-              isDark ? "text-[#6b9386]" : "text-slate-400"
+              isDark ? "text-[#9a9386]" : "text-[#756e63]"
             }`}>
               Optimization Gain
             </span>
-            <div className={`p-2 rounded-xl border ${
-              isDark ? "bg-[#0f2e26] border-[#34d399]/30 text-[#34d399]" : "bg-emerald-50 border-emerald-200 text-emerald-600"
+            <div className={`p-2 rounded-lg border ${
+              isDark ? "bg-[#658a60]/20 border-[#658a60]/40 text-[#8cb487]" : "bg-[#658a60]/15 border-[#658a60]/30 text-[#3f5f3b]"
             }`}>
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <div className={`text-3xl font-extrabold tracking-tight font-serif-display ${
+            <div className={`text-3xl font-extrabold tracking-tight ${
               deltaPct && deltaPct >= 0
-                ? "text-[#34d399]"
-                : isDark ? "text-[#f4f3ee]" : "text-slate-900"
+                ? isDark ? "text-[#8cb487]" : "text-[#3f5f3b]"
+                : isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
             }`}>
               {deltaPct !== null ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(2)}%` : "N/A"}
             </div>
-            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+            <p className={`text-xs mt-1 font-medium ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
               Relative Model Improvement
             </p>
           </div>
@@ -138,30 +138,30 @@ export default function MetricsDashboard({ metrics, problemType }: MetricsDashbo
 
       {/* Best Hyperparameters Table */}
       {bestParams && Object.keys(bestParams).length > 0 && (
-        <div className={`border rounded-2xl p-5 shadow-md transition-colors ${
-          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200 shadow-sm"
+        <div className={`border rounded-xl p-5 transition-colors ${
+          isDark ? "bg-[#23221d] border-[#3c3931]" : "bg-white border-[#dcd5c9]"
         }`}>
           <div className="flex items-center gap-2 mb-4">
             <div className={`p-1.5 rounded-lg border ${
-              isDark ? "bg-[#174337] text-[#eb5e41] border-[#1e4e42]" : "bg-orange-50 text-[#eb5e41] border-orange-200"
+              isDark ? "bg-[#181714] text-[#658a60] border-[#3c3931]" : "bg-[#658a60]/15 text-[#3f5f3b] border-[#658a60]/30"
             }`}>
               <SlidersHorizontal className="w-4 h-4" />
             </div>
-            <h3 className={`text-sm font-bold font-serif-display text-base ${
-              isDark ? "text-[#f4f3ee]" : "text-slate-900"
+            <h3 className={`text-sm font-bold ${
+              isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
             }`}>
               Best Hyperparameters Discovered
             </h3>
           </div>
-          <div className={`overflow-x-auto rounded-xl border ${
-            isDark ? "border-[#1e4e42]" : "border-slate-200"
+          <div className={`overflow-x-auto rounded-lg border ${
+            isDark ? "border-[#3c3931]" : "border-[#dcd5c9]"
           }`}>
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className={`border-b ${
                   isDark
-                    ? "border-[#1e4e42] text-[#98bbaf] bg-[#0d2822]"
-                    : "border-slate-200 text-slate-600 bg-slate-50"
+                    ? "border-[#3c3931] text-[#9a9386] bg-[#181714]"
+                    : "border-[#dcd5c9] text-[#4a453e] bg-[#f4efe6]"
                 }`}>
                   <th className="py-2.5 px-3.5 font-bold">Parameter</th>
                   <th className="py-2.5 px-3.5 font-bold">Tuned Value</th>
@@ -169,17 +169,17 @@ export default function MetricsDashboard({ metrics, problemType }: MetricsDashbo
               </thead>
               <tbody className={`divide-y ${
                 isDark
-                  ? "divide-[#1e4e42] text-[#f4f3ee]"
-                  : "divide-slate-100 text-slate-800"
+                  ? "divide-[#3c3931] text-[#d5cec2]"
+                  : "divide-[#ede8df] text-[#2d2925]"
               }`}>
                 {Object.entries(bestParams).map(([k, v]) => (
                   <tr key={k} className={`transition ${
-                    isDark ? "hover:bg-[#174337]/60" : "hover:bg-slate-50"
+                    isDark ? "hover:bg-[#2c2a24]" : "hover:bg-[#faf8f5]"
                   }`}>
                     <td className={`py-2.5 px-3.5 font-mono font-medium ${
-                      isDark ? "text-[#98bbaf]" : "text-slate-600"
+                      isDark ? "text-[#9a9386]" : "text-[#756e63]"
                     }`}>{k}</td>
-                    <td className="py-2.5 px-3.5 font-mono text-[#eb5e41] font-bold">
+                    <td className="py-2.5 px-3.5 font-mono text-[#d97706] font-bold">
                       {typeof v === "object" ? JSON.stringify(v) : String(v)}
                     </td>
                   </tr>

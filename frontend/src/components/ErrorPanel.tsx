@@ -22,17 +22,18 @@ export default function ErrorPanel({ lastAgent, retryCount = 0, errorTraceback }
   };
 
   return (
-    <div className="bg-[#2d1215] border border-[#7f1d1d]/60 rounded-2xl p-5 space-y-4 shadow-md">
+    <div className="bg-red-50 border border-red-200 rounded-xl p-5 space-y-4">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-[#3f161a] text-[#f87171] border border-[#7f1d1d]/60 shadow-xs">
+          <div className="p-2 rounded-lg bg-red-100 text-red-600 border border-red-200">
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#f4f3ee] font-serif-display text-base">
-              Pipeline Execution Terminated at Agent: <span className="font-mono text-[#f87171] underline">{lastAgent || "Unknown"}</span>
+            <h3 className="text-base font-bold text-[#4a453e] tracking-tight">
+              Pipeline Execution Terminated at Agent:{" "}
+              <span className="font-mono text-red-600 underline">{lastAgent || "Unknown"}</span>
             </h3>
-            <p className="text-xs text-[#98bbaf] mt-0.5 font-medium">
+            <p className="text-xs text-[#7a7268] mt-0.5 font-medium">
               The agent exceeded its maximum retry limit ({retryCount} attempts) and safely routed to the failure sink.
             </p>
           </div>
@@ -40,12 +41,12 @@ export default function ErrorPanel({ lastAgent, retryCount = 0, errorTraceback }
       </div>
 
       {errorTraceback && (
-        <div className="border border-[#7f1d1d]/60 rounded-xl overflow-hidden bg-[#180a0c] shadow-xs">
+        <div className="border border-red-200 rounded-lg overflow-hidden bg-[#fdf8f0]">
           <div
             onClick={() => setIsOpen(!isOpen)}
-            className="p-3 bg-[#261013] border-b border-[#7f1d1d]/60 flex items-center justify-between cursor-pointer text-xs font-semibold text-[#f87171] select-none"
+            className="p-3 bg-red-100 border-b border-red-200 flex items-center justify-between cursor-pointer text-xs font-semibold text-red-700 select-none"
           >
-            <span>Execution Traceback & Diagnostics</span>
+            <span>Execution Traceback &amp; Diagnostics</span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -53,9 +54,9 @@ export default function ErrorPanel({ lastAgent, retryCount = 0, errorTraceback }
                   e.stopPropagation();
                   handleCopy();
                 }}
-                className="p-1 rounded text-[#f87171] hover:bg-[#3f161a] transition flex items-center gap-1 text-[11px] cursor-pointer"
+                className="p-1 rounded text-red-600 hover:bg-red-200 transition flex items-center gap-1 text-[11px] cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-[#34d399]" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-[#658a60]" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "Copied" : "Copy"}
               </button>
               {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -63,7 +64,7 @@ export default function ErrorPanel({ lastAgent, retryCount = 0, errorTraceback }
           </div>
 
           {isOpen && (
-            <pre className="p-4 text-xs font-mono text-[#fca5a5] overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-80 bg-[#180a0c]">
+            <pre className="p-4 text-xs font-mono text-red-800 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-80 bg-[#fdf8f0]">
               {errorTraceback}
             </pre>
           )}

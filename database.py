@@ -1,4 +1,4 @@
-﻿"""
+"""
 database.py
 
 SQLite-backed run registry for the AutoML multi-agent pipeline.
@@ -64,12 +64,13 @@ CREATE TABLE IF NOT EXISTS runs (
     eda_plot_paths    TEXT,
     shap_plot_path    TEXT,
     model_path        TEXT,
-    error_traceback   TEXT
+    error_traceback   TEXT,
+    code_history      TEXT
 );
 """
 
 # Columns whose values are JSON-serialised Python objects (list / dict).
-_JSON_COLUMNS = {"metrics", "eda_plot_paths"}
+_JSON_COLUMNS = {"metrics", "eda_plot_paths", "code_history"}
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -119,6 +120,10 @@ def init_db() -> None:
         conn = _connect()
         try:
             conn.execute(_CREATE_TABLE_SQL)
+            try:
+                conn.execute("ALTER TABLE runs ADD COLUMN code_history TEXT")
+            except Exception:
+                pass
             conn.commit()
         finally:
             conn.close()
@@ -262,3 +267,55 @@ def get_run_dir(run_id: str) -> Path:
         Path object pointing to data/runs/{run_id}/.
     """
     return RUNS_DIR / run_id
+
+
+def delete_run(run_id: str) -> bool:
+    """
+    Delete a single run row by run_id and remove its artifact folder.
+    """
+    with _LOCK:
+        conn = _connect()
+        try:
+            cursor = conn.execute("DELETE FROM runs WHERE run_id = ?", (run_id,))
+            conn.commit()
+            deleted = cursor.rowcount > 0
+        finally:
+            conn.close()
+
+    # Clean up isolated artifact folder
+    run_dir = RUNS_DIR / run_id
+    if run_dir.exists():
+        try:
+            import shutil
+            shutil.rmtree(run_dir, ignore_errors=True)
+        except Exception:
+            pass
+
+    return deleted
+
+
+def delete_all_runs() -> int:
+    """
+    Delete all run rows from the database and remove all run artifact directories.
+    """
+    with _LOCK:
+        conn = _connect()
+        try:
+            cursor = conn.execute("DELETE FROM runs")
+            conn.commit()
+            count = cursor.rowcount
+        finally:
+            conn.close()
+
+    # Clean up all run artifact folders
+    if RUNS_DIR.exists():
+        try:
+            import shutil
+            for child in RUNS_DIR.iterdir():
+                if child.is_dir():
+                    shutil.rmtree(child, ignore_errors=True)
+        except Exception:
+            pass
+
+    return count
+

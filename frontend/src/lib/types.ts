@@ -1,5 +1,5 @@
 export type ProblemType = "classification" | "regression";
-export type RunStatus = "pending" | "running" | "done" | "failed";
+export type RunStatus = "pending" | "running" | "paused" | "done" | "failed" | "cancelled";
 
 export type AgentNode = "loader_eda" | "feature_engineer" | "tuner" | "explainer";
 
@@ -27,4 +27,6 @@ export interface RunDetail extends RunSummary {
   shap_plot_path?: string | null;
   model_path?: string | null;
   error_traceback?: string | null;
+  code_history?: string[] | null;
 }
+

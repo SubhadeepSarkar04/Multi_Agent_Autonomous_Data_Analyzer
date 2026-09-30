@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import PipelineStepper from "../components/PipelineStepper";
+import ExecutionControlPanel from "../components/ExecutionControlPanel";
 import MetricsDashboard from "../components/MetricsDashboard";
 import EDAGallery from "../components/EDAGallery";
 import SHAPViewer from "../components/SHAPViewer";
@@ -11,7 +12,7 @@ import ErrorPanel from "../components/ErrorPanel";
 import EmptyState from "../components/EmptyState";
 import ThemeToggle from "../components/ThemeToggle";
 import { useTheme } from "../lib/ThemeContext";
-import { getRuns, getRunStatus, startRun } from "../lib/api";
+import { getArtifactUrl, getRuns, getRunStatus, startRun } from "../lib/api";
 import { ProblemType, RunDetail, RunSummary } from "../lib/types";
 import {
   BarChart3,
@@ -24,10 +25,10 @@ import {
   Hourglass,
   XCircle,
   Upload,
-  Cpu,
   Play,
   RotateCcw,
   Check,
+  Pause,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -55,7 +56,11 @@ export default function DashboardPage() {
       const data = await getRuns();
       setRuns(data);
       setApiUnreachable(false);
-      if (!selectedRunId && data.length > 0) {
+
+      if (data.length === 0) {
+        setSelectedRunId(null);
+        setActiveRun(null);
+      } else if (!selectedRunId || !data.some((r) => r.run_id === selectedRunId)) {
         setSelectedRunId(data[0].run_id);
       }
     } catch {
@@ -89,9 +94,14 @@ export default function DashboardPage() {
     }
   }, [selectedRunId, fetchActiveRunDetail]);
 
-  // Background polling when run is pending/running
+  // Background polling when run is pending/running/paused
   useEffect(() => {
-    if (!activeRun || (activeRun.status !== "pending" && activeRun.status !== "running")) {
+    if (
+      !activeRun ||
+      (activeRun.status !== "pending" &&
+        activeRun.status !== "running" &&
+        activeRun.status !== "paused")
+    ) {
       return;
     }
 
@@ -127,7 +137,7 @@ export default function DashboardPage() {
   const handleQuickCommandSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commandFile) {
-      setCommandError("Please click the orange icon or upload a dataset first.");
+      setCommandError("Please upload a dataset CSV first.");
       if (fileInputRef.current) {
         fileInputRef.current.click();
       }
@@ -140,45 +150,51 @@ export default function DashboardPage() {
     handleStartRun(commandFile, commandTarget.trim(), commandProblemType);
   };
 
-  const handleQuickTry = (target: string, type: ProblemType) => {
-    setCommandTarget(target);
-    setCommandProblemType(type);
-    setCommandError(null);
-  };
-
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case "done":
         return (
-          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full shadow-xs ${
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
             isDark
-              ? "text-[#34d399] bg-[#0f2e26] border border-[#34d399]/40"
-              : "text-emerald-700 bg-emerald-50 border border-emerald-200"
+              ? "text-[#8cb487] bg-[#658a60]/20 border-[#658a60]/40"
+              : "text-[#3f5f3b] bg-[#658a60]/15 border-[#658a60]/30"
           }`}>
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399]" />
+            <CheckCircle2 className="w-3.5 h-3.5" />
             Completed
           </span>
         );
+      case "paused":
+        return (
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
+            isDark
+              ? "text-[#f59e0b] bg-[#d97706]/20 border-[#d97706]/40"
+              : "text-[#b45309] bg-[#d97706]/15 border-[#d97706]/30"
+          }`}>
+            <Pause className="w-3.5 h-3.5" />
+            Paused
+          </span>
+        );
+      case "cancelled":
       case "failed":
         return (
-          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full shadow-xs ${
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
             isDark
-              ? "text-[#f87171] bg-[#2d1215] border border-[#7f1d1d]/60"
-              : "text-rose-700 bg-rose-50 border border-rose-200"
+              ? "text-rose-400 bg-rose-950/40 border-rose-900/50"
+              : "text-rose-700 bg-rose-50 border-rose-200"
           }`}>
-            <XCircle className="w-3.5 h-3.5 text-[#f87171]" />
-            Failed
+            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+            {status === "failed" ? "Failed" : "Cancelled"}
           </span>
         );
       case "running":
       case "pending":
         return (
-          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full animate-pulse shadow-xs ${
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
             isDark
-              ? "text-[#eb5e41] bg-[#174337] border border-[#eb5e41]/60"
-              : "text-blue-600 bg-blue-50 border border-blue-200"
+              ? "text-[#f59e0b] bg-[#d97706]/20 border-[#d97706]/40"
+              : "text-[#b45309] bg-[#d97706]/15 border-[#d97706]/30"
           }`}>
-            <Hourglass className="w-3.5 h-3.5 animate-spin text-[#eb5e41]" />
+            <Hourglass className="w-3.5 h-3.5 animate-spin text-[#d97706]" />
             Processing
           </span>
         );
@@ -190,58 +206,45 @@ export default function DashboardPage() {
   return (
     <div className={`min-h-screen relative overflow-x-hidden transition-colors duration-200 ${
       isDark
-        ? "bg-[#081d18] text-[#f4f3ee]"
-        : "bg-[#f8fafc] text-[#0f172a]"
+        ? "bg-[#181714] text-[#f4f1ea]"
+        : "bg-[#f4f1ea] text-[#2d2925]"
     }`}>
-      {/* ── Top Navbar (Matching VoiceCart Header) ── */}
-      <header className={`border-b sticky top-0 z-50 backdrop-blur-md transition-colors ${
+      {/* ── Top Navbar ── */}
+      <header className={`border-b sticky top-0 z-50 transition-colors ${
         isDark
-          ? "border-[#1e4e42] bg-[#081d18]/90"
-          : "border-slate-200 bg-white/90 shadow-2xs"
+          ? "border-[#3c3931] bg-[#1f1e1a]"
+          : "border-[#dcd5c9] bg-[#f4f1ea]"
       }`}>
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full border-2 border-[#eb5e41] flex items-center justify-center shadow-md shadow-[#eb5e41]/20">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#eb5e41]" />
+            <div className="w-8 h-8 rounded-lg bg-[#658a60] flex items-center justify-center text-white font-bold text-sm shadow-xs">
+              A
             </div>
-            <span className={`font-serif-display text-lg font-bold tracking-tight ${
-              isDark ? "text-[#f4f3ee]" : "text-slate-900"
-            }`}>
-              AutoML Studio
-            </span>
+            <div>
+              <span className={`text-base font-bold tracking-tight block leading-tight ${
+                isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
+              }`}>
+                AutoML Studio
+              </span>
+              <span className={`text-[10px] font-medium tracking-wide ${
+                isDark ? "text-[#9a9386]" : "text-[#756e63]"
+              }`}>
+                Organic Autonomous Data Analyzer
+              </span>
+            </div>
           </div>
 
-          {/* Right Header Badges / Actions & Theme Switcher */}
+          {/* Workspace status and appearance */}
           <div className="flex items-center gap-2 text-xs">
-            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${
+            <div className={`hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-md border ${
               isDark
-                ? "bg-[#12382f] border-[#1e4e42] text-[#98bbaf]"
-                : "bg-slate-100 border-slate-200 text-slate-600"
+                ? "bg-[#252420] border-[#3c3931] text-[#d5cec2]"
+                : "bg-[#f4efe6] border-[#dcd5c9] text-[#4a453e]"
             }`}>
-              <Cpu className="w-3.5 h-3.5 text-[#eb5e41]" />
-              <span>Multi-Agent Mode</span>
+              <span className="w-2 h-2 rounded-full bg-[#658a60]" />
+              <span className="font-medium">Local workspace</span>
             </div>
-
-            <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${
-              isDark
-                ? "bg-[#12382f] border-[#1e4e42] text-[#98bbaf]"
-                : "bg-slate-100 border-slate-200 text-slate-600"
-            }`}>
-              <Sparkles className="w-3.5 h-3.5 text-[#34d399]" />
-              <span>LangGraph Active</span>
-            </div>
-
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${
-              isDark
-                ? "bg-[#12382f] border-[#1e4e42] text-[#98bbaf]"
-                : "bg-slate-100 border-slate-200 text-slate-600"
-            }`}>
-              <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse" />
-              <span>Groq LLaMA 3.3</span>
-            </div>
-
-            {/* Theme Toggle (Light / Dark / System) */}
             <ThemeToggle />
           </div>
         </div>
@@ -251,19 +254,19 @@ export default function DashboardPage() {
       {apiUnreachable && (
         <div className={`border-b py-2.5 px-6 text-xs ${
           isDark
-            ? "bg-[#2d1215] border-[#7f1d1d]/60 text-[#f87171]"
-            : "bg-rose-50 border-rose-200 text-rose-700"
+            ? "bg-rose-950/60 border-rose-900/60 text-rose-300"
+            : "bg-rose-50 border-rose-200 text-rose-800"
         }`}>
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>
-                Cannot reach FastAPI server at <strong>http://127.0.0.1:8000</strong>. Ensure the backend is active.
+                Cannot reach backend server. Make sure the API server is active.
               </span>
             </div>
             <button
               onClick={fetchAllRuns}
-              className="underline font-semibold cursor-pointer"
+              className="underline font-semibold cursor-pointer text-[#d97706]"
             >
               Retry
             </button>
@@ -271,55 +274,55 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ── Main Container (Matching VoiceCart Hero & Form Layout) ── */}
-      <main className="max-w-5xl mx-auto px-4 pt-10 pb-16 space-y-6">
-        {/* Hero Section */}
+      <main className="max-w-6xl mx-auto px-4 pt-8 pb-16 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-3">
-            <p className={`text-[11px] font-bold uppercase tracking-widest ${
-              isDark ? "text-[#6b9386]" : "text-slate-400"
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#658a60]" />
+              <p className={`text-[11px] font-bold uppercase tracking-widest ${
+                isDark ? "text-[#9a9386]" : "text-[#756e63]"
+              }`}>
+                ANALYSIS WORKSPACE
+              </p>
+            </div>
+            <h1 className={`text-2xl md:text-3xl font-bold tracking-tight ${
+              isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
             }`}>
-              VOICE & MULTI-AGENT DATA SCIENTIST
-            </p>
-            <h1 className={`text-4xl md:text-6xl font-serif-display font-medium tracking-tight leading-[1.1] ${
-              isDark ? "text-[#f4f3ee]" : "text-slate-900"
-            }`}>
-              Your data, analyzed<br />plainly.
+              Start a new analysis
             </h1>
-            <p className={`text-sm max-w-xl leading-relaxed ${
-              isDark ? "text-[#98bbaf]" : "text-slate-500"
+            <p className={`text-sm max-w-2xl leading-relaxed ${
+              isDark ? "text-[#d5cec2]" : "text-[#4a453e]"
             }`}>
-              Add datasets, clean missing values, engineer non-leaking features, optimize Bayesian models with Optuna, and explain predictions hands free.
+              Upload a CSV, choose the column you want to predict, and the pipeline will prepare data, train a model, and generate explanations.
             </p>
           </div>
 
-          {/* Right Mode Dropdown Pill */}
+          {/* Right Mode Dropdown */}
           <div className="flex flex-col gap-1.5 self-start md:self-end">
-            <label className={`text-[11px] font-medium ${isDark ? "text-[#6b9386]" : "text-slate-400"}`}>
-              Recognition Problem
+            <label className={`text-[11px] font-semibold ${isDark ? "text-[#9a9386]" : "text-[#4a453e]"}`}>
+              Problem type
             </label>
             <select
               value={commandProblemType}
               onChange={(e) => setCommandProblemType(e.target.value as ProblemType)}
-              className={`font-semibold text-xs rounded-xl px-4 py-2.5 shadow-md border focus:outline-none focus:ring-2 focus:ring-[#eb5e41] cursor-pointer min-w-[160px] ${
+              className={`font-medium text-sm rounded-lg px-3 py-2.5 border focus:outline-none focus:ring-2 focus:ring-[#658a60] cursor-pointer min-w-[180px] transition ${
                 isDark
-                  ? "bg-white text-[#0a241e] border-transparent"
-                  : "bg-white text-slate-800 border-slate-200 shadow-sm"
+                  ? "bg-[#252420] text-[#f4f1ea] border-[#3c3931]"
+                  : "bg-white text-[#2d2925] border-[#dcd5c9]"
               }`}
             >
-              <option value="classification">Classification (US)</option>
-              <option value="regression">Regression (Continuous)</option>
+              <option value="classification">Classification</option>
+              <option value="regression">Regression</option>
             </select>
           </div>
         </div>
 
-        {/* ── Action Card (Matching the large VoiceCart mic box) ── */}
-        <div className={`border rounded-2xl p-6 flex items-center gap-5 shadow-lg relative overflow-hidden transition-colors ${
+        {/* Upload Card */}
+        <div className={`border rounded-xl p-5 flex items-center gap-4 transition-colors ${
           isDark
-            ? "bg-[#12382f] border-[#1e4e42]"
-            : "bg-white border-slate-200 shadow-md"
+            ? "bg-[#23221d] border-[#3c3931]"
+            : "bg-white border-[#dcd5c9]"
         }`}>
-          {/* Circular Coral Action Trigger */}
           <input
             ref={fileInputRef}
             type="file"
@@ -336,181 +339,118 @@ export default function DashboardPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             title="Upload CSV dataset"
-            className="w-16 h-16 rounded-full bg-[#eb5e41] hover:bg-[#d94b2c] text-white flex items-center justify-center shadow-lg shadow-[#eb5e41]/30 transition transform hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+            className="w-12 h-12 rounded-xl bg-[#658a60] hover:bg-[#53744e] text-white flex items-center justify-center transition cursor-pointer shrink-0 shadow-xs"
           >
             {commandFile ? (
-              <Check className="w-7 h-7" />
+              <Check className="w-5 h-5 stroke-[2.5]" />
             ) : (
-              <Upload className="w-7 h-7" />
+              <Upload className="w-5 h-5 stroke-[2.2]" />
             )}
           </button>
 
           <div className="space-y-1">
             <h2 className={`text-base font-bold flex items-center gap-2 ${
-              isDark ? "text-[#f4f3ee]" : "text-slate-900"
+              isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
             }`}>
-              {commandFile ? `Loaded: ${commandFile.name}` : "Tap button to upload dataset"}
+              {commandFile ? commandFile.name : "Upload a dataset"}
               {commandFile && (
-                <span className="text-[11px] font-normal bg-[#0f2e26] text-[#34d399] border border-[#34d399]/40 px-2 py-0.5 rounded-full">
-                  Ready
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${
+                  isDark ? "bg-[#658a60]/20 text-[#8cb487] border-[#658a60]/40" : "bg-[#658a60]/15 text-[#3f5f3b] border-[#658a60]/30"
+                }`}>
+                  Ready to run
                 </span>
               )}
             </h2>
-            <p className={`text-xs ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+            <p className={`text-xs ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
               {commandFile
-                ? "Dataset attached. Specify target column below and tap 'Run command' to start."
-                : 'Say "add Titanic dataset" or tap the icon to select your CSV file.'}
+                ? "Choose the target column below, then start the analysis."
+                : "Select a CSV file from your computer."}
             </p>
           </div>
         </div>
 
-        {/* ── Quick Try Row (Matching VoiceCart Quick Try Pills) ── */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className={`text-[11px] font-bold uppercase tracking-wider mr-1 ${
-            isDark ? "text-[#6b9386]" : "text-slate-400"
-          }`}>
-            QUICK TRY:
-          </span>
-
-          <button
-            onClick={() => handleQuickTry("Survived", "classification")}
-            className={`px-3.5 py-1.5 rounded-full font-semibold transition shadow-2xs cursor-pointer text-xs ${
-              isDark
-                ? "bg-white text-[#0a241e] hover:bg-[#f4f3ee]"
-                : "bg-slate-900 text-white hover:bg-black"
-            }`}
-          >
-            Survived (Titanic)
-          </button>
-
-          <button
-            onClick={() => handleQuickTry("Price", "regression")}
-            className={`px-3.5 py-1.5 rounded-full font-medium transition cursor-pointer text-xs border ${
-              isDark
-                ? "bg-[#12382f] text-[#f4f3ee] border-[#1e4e42] hover:border-[#eb5e41]/60"
-                : "bg-white text-slate-700 border-slate-200 hover:border-[#eb5e41]"
-            }`}
-          >
-            Price (Housing)
-          </button>
-
-          <button
-            onClick={() => handleQuickTry("Churn", "classification")}
-            className={`px-3.5 py-1.5 rounded-full font-medium transition cursor-pointer text-xs border ${
-              isDark
-                ? "bg-[#12382f] text-[#f4f3ee] border-[#1e4e42] hover:border-[#eb5e41]/60"
-                : "bg-white text-slate-700 border-slate-200 hover:border-[#eb5e41]"
-            }`}
-          >
-            Churn (Customers)
-          </button>
-
-          <button
-            onClick={() => handleQuickTry("Default", "classification")}
-            className={`px-3.5 py-1.5 rounded-full font-medium transition cursor-pointer text-xs border ${
-              isDark
-                ? "bg-[#12382f] text-[#f4f3ee] border-[#1e4e42] hover:border-[#eb5e41]/60"
-                : "bg-white text-slate-700 border-slate-200 hover:border-[#eb5e41]"
-            }`}
-          >
-            Default (Credit Risk)
-          </button>
-
-          <button
-            onClick={() => {
-              setCommandTarget("");
-              setCommandFile(null);
-              setCommandError(null);
-            }}
-            className={`px-3.5 py-1.5 rounded-full border transition cursor-pointer text-xs ${
-              isDark
-                ? "bg-[#12382f] text-[#98bbaf] border-[#1e4e42] hover:text-[#f4f3ee]"
-                : "bg-slate-100 text-slate-500 border-slate-200 hover:text-slate-900"
-            }`}
-          >
-            clear target
-          </button>
-        </div>
-
-        {/* ── White Command / Target Input Bar (Matching VoiceCart Command Bar) ── */}
-        <form onSubmit={handleQuickCommandSubmit} className="space-y-2">
+        {/* Target input & Run Form */}
+        <form onSubmit={handleQuickCommandSubmit} className={`rounded-xl border p-4 space-y-2 transition-colors ${
+          isDark ? "bg-[#23221d] border-[#3c3931]" : "bg-white border-[#dcd5c9]"
+        }`}>
           <div className="flex flex-col sm:flex-row items-stretch gap-2">
-            <div className={`flex-1 rounded-xl shadow-md flex items-center px-4 py-1.5 focus-within:ring-2 focus-within:ring-[#eb5e41] border ${
+            <div className={`flex-1 rounded-lg flex items-center px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#658a60] border transition ${
               isDark
-                ? "bg-white border-transparent"
-                : "bg-white border-slate-200"
+                ? "bg-[#181714] border-[#3c3931]"
+                : "bg-[#faf8f5] border-[#dcd5c9]"
             }`}>
               <input
                 type="text"
-                placeholder='Type target column name, e.g. "Survived", "Price", "Churn", "Outcome"'
+                placeholder='Target column, e.g. "Survived"'
                 value={commandTarget}
                 onChange={(e) => setCommandTarget(e.target.value)}
-                className="w-full bg-transparent text-[#0a241e] font-medium text-xs sm:text-sm placeholder-[#738a83] focus:outline-none py-2"
+                className={`w-full bg-transparent font-medium text-sm focus:outline-none py-2 ${
+                  isDark ? "text-[#f4f1ea] placeholder:text-[#7a7469]" : "text-[#2d2925] placeholder:text-[#948c80]"
+                }`}
               />
             </div>
 
             <button
               type="submit"
               disabled={isStarting}
-              className="bg-[#eb5e41] hover:bg-[#d94b2c] disabled:opacity-60 text-white font-semibold text-xs sm:text-sm px-7 py-3 rounded-xl shadow-md shadow-[#eb5e41]/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
+              className="bg-[#658a60] hover:bg-[#53744e] disabled:opacity-60 text-white font-semibold text-sm px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-xs"
             >
               {isStarting ? (
                 <>
                   <Hourglass className="w-4 h-4 animate-spin text-white" />
-                  <span>Running...</span>
+                  <span>Starting...</span>
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4 fill-current text-white" />
-                  <span>Run command</span>
+                  <span>Run analysis</span>
                 </>
               )}
             </button>
           </div>
 
           {commandError && (
-            <p className={`text-xs p-2.5 rounded-xl border ${
+            <p className={`text-xs p-2.5 rounded-lg border ${
               isDark
-                ? "text-[#f87171] bg-[#2d1215] border-[#7f1d1d]/60"
-                : "text-rose-600 bg-rose-50 border-rose-200"
+                ? "text-rose-300 bg-rose-950/50 border-rose-900/60"
+                : "text-rose-700 bg-rose-50 border-rose-200"
             }`}>
               {commandError}
             </p>
           )}
         </form>
 
-        {/* ── Studio Frame with Sidebar and Active Analysis ── */}
+        {/* Analysis workspace */}
         <div ref={studioRef} className="pt-4 space-y-4">
-          {/* MY LISTS Header Strip (Matching Screenshot) */}
-          <div className={`border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-md transition-colors ${
+          <div className={`border rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 transition-colors ${
             isDark
-              ? "bg-[#12382f] border-[#1e4e42]"
-              : "bg-white border-slate-200 shadow-sm"
+              ? "bg-[#23221d] border-[#3c3931]"
+              : "bg-white border-[#dcd5c9]"
           }`}>
             <div className="flex items-center gap-3">
               <span className={`text-[11px] font-bold uppercase tracking-wider ${
-                isDark ? "text-[#6b9386]" : "text-slate-400"
+                isDark ? "text-[#9a9386]" : "text-[#756e63]"
               }`}>
-                MY LISTS
+                CURRENT ANALYSIS
               </span>
 
               {activeRun ? (
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold ${
                   isDark
-                    ? "bg-[#174337] border-[#1e4e42] text-[#f4f3ee]"
-                    : "bg-slate-100 border-slate-200 text-slate-800"
+                    ? "bg-[#181714] border-[#3c3931] text-[#f4f1ea]"
+                    : "bg-[#f4efe6] border-[#dcd5c9] text-[#2d2925]"
                 }`}>
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#eb5e41]" />
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#658a60]" />
                   <span>{activeRun.csv_filename}</span>
-                  <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center ${
-                    isDark ? "bg-[#0a241e] text-[#98bbaf]" : "bg-slate-200 text-slate-600"
+                  <span className={`w-4 h-4 rounded text-[10px] flex items-center justify-center ${
+                    isDark ? "bg-[#2c2a24] text-[#9a9386]" : "bg-[#dcd5c9] text-[#4a453e]"
                   }`}>
                     {runs.length}
                   </span>
                 </div>
               ) : (
-                <span className={`text-xs ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
-                  No active analysis selected
+                <span className={`text-xs ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
+                  Select a run from history to inspect its results
                 </span>
               )}
             </div>
@@ -518,10 +458,10 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2 text-xs">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className={`px-3 py-1.5 rounded-lg transition border cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition border cursor-pointer font-medium ${
                   isDark
-                    ? "bg-[#174337] hover:bg-[#1f5647] text-[#f4f3ee] border-[#1e4e42]"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
+                    ? "bg-[#2c2a24] hover:bg-[#38362e] text-[#f4f1ea] border-[#3c3931]"
+                    : "bg-[#faf8f5] hover:bg-[#ede8df] text-[#2d2925] border-[#dcd5c9]"
                 }`}
               >
                 + New run
@@ -529,10 +469,10 @@ export default function DashboardPage() {
 
               <button
                 onClick={fetchAllRuns}
-                className={`px-3 py-1.5 rounded-lg transition border cursor-pointer flex items-center gap-1 ${
+                className={`px-3 py-1.5 rounded-lg transition border cursor-pointer flex items-center gap-1 font-medium ${
                   isDark
-                    ? "bg-[#174337] hover:bg-[#1f5647] text-[#98bbaf] hover:text-[#f4f3ee] border-[#1e4e42]"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border-slate-200"
+                    ? "bg-[#2c2a24] hover:bg-[#38362e] text-[#d5cec2] hover:text-[#f4f1ea] border-[#3c3931]"
+                    : "bg-[#faf8f5] hover:bg-[#ede8df] text-[#4a453e] hover:text-[#2d2925] border-[#dcd5c9]"
                 }`}
               >
                 <RotateCcw className="w-3 h-3" />
@@ -541,12 +481,12 @@ export default function DashboardPage() {
 
               {activeRun?.cleaned_csv_path && (
                 <a
-                  href={`http://127.0.0.1:8000/runs/${activeRun.run_id}/artifacts/cleaned_dataset.csv`}
+                  href={getArtifactUrl(activeRun.run_id, activeRun.cleaned_csv_path)}
                   download="cleaned_dataset.csv"
-                  className={`px-3 py-1.5 rounded-lg transition border cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg transition border cursor-pointer font-medium ${
                     isDark
-                      ? "bg-[#174337] hover:bg-[#1f5647] text-[#98bbaf] hover:text-[#f4f3ee] border-[#1e4e42]"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border-slate-200"
+                      ? "bg-[#2c2a24] hover:bg-[#38362e] text-[#d5cec2] hover:text-[#f4f1ea] border-[#3c3931]"
+                      : "bg-[#faf8f5] hover:bg-[#ede8df] text-[#4a453e] hover:text-[#2d2925] border-[#dcd5c9]"
                   }`}
                 >
                   Export CSV
@@ -555,11 +495,10 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Main App Frame Card */}
-          <div className={`border rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row min-h-[640px] transition-colors ${
+          <div className={`border rounded-xl overflow-hidden flex flex-col md:flex-row min-h-[640px] transition-colors ${
             isDark
-              ? "bg-[#0a241e] border-[#1e4e42]"
-              : "bg-white border-slate-200 shadow-md"
+              ? "bg-[#181714] border-[#3c3931]"
+              : "bg-white border-[#dcd5c9]"
           }`}>
             {/* Left Sidebar */}
             <Sidebar
@@ -569,16 +508,14 @@ export default function DashboardPage() {
                 setSelectedRunId(id);
                 setActiveTab("overview");
               }}
-              onStartRun={handleStartRun}
               onRefreshRuns={fetchAllRuns}
-              isStarting={isStarting}
             />
 
             {/* Main Workspace Area */}
             <main className={`flex-1 flex flex-col overflow-y-auto p-5 md:p-8 transition-colors ${
               isDark
-                ? "bg-[#081d18]"
-                : "bg-slate-50/50"
+                ? "bg-[#181714]"
+                : "bg-[#faf8f5]"
             }`}>
               {!activeRun ? (
                 <EmptyState />
@@ -586,19 +523,19 @@ export default function DashboardPage() {
                 <div className="max-w-4xl w-full mx-auto space-y-6">
                   {/* Header / Active Run Meta */}
                   <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b ${
-                    isDark ? "border-[#1e4e42]" : "border-slate-200"
+                    isDark ? "border-[#3c3931]" : "border-[#dcd5c9]"
                   }`}>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2.5 rounded-xl border text-[#eb5e41] shadow-2xs ${
-                          isDark ? "bg-[#12382f] border-[#1e4e42]" : "bg-white border-slate-200"
+                        <div className={`p-2.5 rounded-xl border text-[#658a60] ${
+                          isDark ? "bg-[#23221d] border-[#3c3931]" : "bg-white border-[#dcd5c9]"
                         }`}>
                           <FileSpreadsheet className="w-5 h-5" />
                         </div>
                         <div>
                           <div className="flex items-center gap-3">
-                            <h2 className={`text-xl font-bold tracking-tight font-serif-display ${
-                              isDark ? "text-[#f4f3ee]" : "text-slate-900"
+                            <h2 className={`text-xl font-bold tracking-tight ${
+                              isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
                             }`}>
                               {activeRun.csv_filename}
                             </h2>
@@ -607,17 +544,17 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className={`flex flex-wrap items-center gap-3 text-xs pl-12 ${
-                        isDark ? "text-[#98bbaf]" : "text-slate-500"
+                        isDark ? "text-[#9a9386]" : "text-[#756e63]"
                       }`}>
                         <span>
-                          Target: <strong className="text-[#eb5e41] font-semibold">{activeRun.target_column}</strong>
+                          Target: <strong className="text-[#d97706] font-semibold">{activeRun.target_column}</strong>
                         </span>
-                        <span className={isDark ? "text-[#1e4e42]" : "text-slate-300"}>•</span>
+                        <span className={isDark ? "text-[#3c3931]" : "text-[#dcd5c9]"}>•</span>
                         <span>
-                          Problem: <strong className={`font-semibold capitalize ${isDark ? "text-[#f4f3ee]" : "text-slate-800"}`}>{activeRun.problem_type}</strong>
+                          Problem: <strong className={`font-semibold capitalize ${isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"}`}>{activeRun.problem_type}</strong>
                         </span>
-                        <span className={isDark ? "text-[#1e4e42]" : "text-slate-300"}>•</span>
-                        <span className="font-mono text-[11px] opacity-70">ID: {activeRun.run_id}</span>
+                        <span className={isDark ? "text-[#3c3931]" : "text-[#dcd5c9]"}>•</span>
+                        <span className={`font-mono text-[11px] ${isDark ? "text-[#7a7469]" : "text-[#948c80]"}`}>ID: {activeRun.run_id}</span>
                       </div>
                     </div>
                   </div>
@@ -629,6 +566,15 @@ export default function DashboardPage() {
                     retryCount={activeRun.retry_count}
                   />
 
+                  {/* Execution Control Hub */}
+                  <ExecutionControlPanel
+                    run={activeRun}
+                    onRefresh={() => {
+                      fetchActiveRunDetail();
+                      fetchAllRuns();
+                    }}
+                  />
+
                   {/* Error Diagnostics if failed */}
                   {activeRun.status === "failed" && (
                     <ErrorPanel
@@ -638,71 +584,71 @@ export default function DashboardPage() {
                     />
                   )}
 
-                  {/* Tab Navigation Pill Bar */}
+                  {/* Tab Navigation Bar */}
                   <div className={`flex items-center gap-2 border-b ${
-                    isDark ? "border-[#1e4e42]" : "border-slate-200"
+                    isDark ? "border-[#3c3931]" : "border-[#dcd5c9]"
                   }`}>
                     <button
                       onClick={() => setActiveTab("overview")}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
+                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-lg ${
                         activeTab === "overview"
                           ? isDark
-                            ? "border-[#eb5e41] text-[#eb5e41] bg-[#12382f] shadow-xs font-bold"
-                            : "border-[#eb5e41] text-[#eb5e41] bg-white shadow-xs font-bold"
+                            ? "border-[#658a60] text-[#8cb487] bg-[#23221d] font-bold"
+                            : "border-[#658a60] text-[#3f5f3b] bg-white font-bold"
                           : isDark
-                          ? "border-transparent text-[#98bbaf] hover:text-[#f4f3ee] hover:bg-[#12382f]/60"
-                          : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                          ? "border-transparent text-[#9a9386] hover:text-[#f4f1ea] hover:bg-[#23221d]"
+                          : "border-transparent text-[#756e63] hover:text-[#2d2925] hover:bg-[#ede8df]"
                       }`}
                     >
-                      <BarChart3 className="w-4 h-4 text-[#eb5e41]" />
+                      <BarChart3 className="w-4 h-4 text-[#658a60]" />
                       Performance Overview
                     </button>
 
                     <button
                       onClick={() => setActiveTab("eda")}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
+                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-lg ${
                         activeTab === "eda"
                           ? isDark
-                            ? "border-[#eb5e41] text-[#eb5e41] bg-[#12382f] shadow-xs font-bold"
-                            : "border-[#eb5e41] text-[#eb5e41] bg-white shadow-xs font-bold"
+                            ? "border-[#658a60] text-[#8cb487] bg-[#23221d] font-bold"
+                            : "border-[#658a60] text-[#3f5f3b] bg-white font-bold"
                           : isDark
-                          ? "border-transparent text-[#98bbaf] hover:text-[#f4f3ee] hover:bg-[#12382f]/60"
-                          : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                          ? "border-transparent text-[#9a9386] hover:text-[#f4f1ea] hover:bg-[#23221d]"
+                          : "border-transparent text-[#756e63] hover:text-[#2d2925] hover:bg-[#ede8df]"
                       }`}
                     >
-                      <ImageIcon className="w-4 h-4 text-[#eb5e41]" />
+                      <ImageIcon className="w-4 h-4 text-[#658a60]" />
                       EDA Heatmaps & Plots
                     </button>
 
                     <button
                       onClick={() => setActiveTab("shap")}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
+                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-lg ${
                         activeTab === "shap"
                           ? isDark
-                            ? "border-[#eb5e41] text-[#eb5e41] bg-[#12382f] shadow-xs font-bold"
-                            : "border-[#eb5e41] text-[#eb5e41] bg-white shadow-xs font-bold"
+                            ? "border-[#658a60] text-[#8cb487] bg-[#23221d] font-bold"
+                            : "border-[#658a60] text-[#3f5f3b] bg-white font-bold"
                           : isDark
-                          ? "border-transparent text-[#98bbaf] hover:text-[#f4f3ee] hover:bg-[#12382f]/60"
-                          : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                          ? "border-transparent text-[#9a9386] hover:text-[#f4f1ea] hover:bg-[#23221d]"
+                          : "border-transparent text-[#756e63] hover:text-[#2d2925] hover:bg-[#ede8df]"
                       }`}
                     >
-                      <Sparkles className="w-4 h-4 text-[#eb5e41]" />
+                      <Sparkles className="w-4 h-4 text-[#d97706]" />
                       SHAP Explainability
                     </button>
 
                     <button
                       onClick={() => setActiveTab("artifacts")}
-                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-xl ${
+                      className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold border-b-2 transition duration-150 cursor-pointer rounded-t-lg ${
                         activeTab === "artifacts"
                           ? isDark
-                            ? "border-[#eb5e41] text-[#eb5e41] bg-[#12382f] shadow-xs font-bold"
-                            : "border-[#eb5e41] text-[#eb5e41] bg-white shadow-xs font-bold"
+                            ? "border-[#658a60] text-[#8cb487] bg-[#23221d] font-bold"
+                            : "border-[#658a60] text-[#3f5f3b] bg-white font-bold"
                           : isDark
-                          ? "border-transparent text-[#98bbaf] hover:text-[#f4f3ee] hover:bg-[#12382f]/60"
-                          : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                          ? "border-transparent text-[#9a9386] hover:text-[#f4f1ea] hover:bg-[#23221d]"
+                          : "border-transparent text-[#756e63] hover:text-[#2d2925] hover:bg-[#ede8df]"
                       }`}
                     >
-                      <Download className="w-4 h-4 text-[#eb5e41]" />
+                      <Download className="w-4 h-4 text-[#658a60]" />
                       Artifact Downloads
                     </button>
                   </div>

@@ -2,40 +2,46 @@
 
 @layer base {
   :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
+    --background: #f4f1ea;
+    --foreground: #2d2925;
     --card: #ffffff;
-    --card-surface: #f1f5f9;
-    --card-inner: #e2e8f0;
-    --card-border: #cbd5e1;
-    --accent-coral: #eb5e41;
-    --accent-coral-hover: #d94b2c;
-    --sage-text: #64748b;
-    --sage-muted: #94a3b8;
+    --card-surface: #faf8f5;
+    --card-inner: #ede8df;
+    --card-border: #dcd5c9;
+    --text-primary: #2d2925;
+    --text-structure: #4a453e;
+    --text-muted: #756e63;
+    --accent-sage: #5b8056;
+    --accent-sage-hover: #496745;
+    --accent-amber: #d97706;
+    --accent-amber-hover: #b45309;
   }
 
   html.dark {
-    --background: #081d18;
-    --foreground: #f4f3ee;
-    --card: #12382f;
-    --card-surface: #174337;
-    --card-inner: #1a493d;
-    --card-border: #1e4e42;
-    --accent-coral: #eb5e41;
-    --accent-coral-hover: #d94b2c;
-    --sage-text: #98bbaf;
-    --sage-muted: #6b9386;
+    --background: #181714;
+    --foreground: #f4f1ea;
+    --card: #23221d;
+    --card-surface: #181714;
+    --card-inner: #2c2a24;
+    --card-border: #3c3931;
+    --text-primary: #f4f1ea;
+    --text-structure: #d5cec2;
+    --text-muted: #9a9386;
+    --accent-sage: #76a370;
+    --accent-sage-hover: #8bb885;
+    --accent-amber: #f59e0b;
+    --accent-amber-hover: #fbbf24;
   }
 }
 
 html.light body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #f4f1ea;
+  color: #2d2925;
 }
 
 html.dark body {
-  background-color: #081d18;
-  color: #f4f3ee;
+  background-color: #181714;
+  color: #f4f1ea;
 }
 
 body {
@@ -43,23 +49,19 @@ body {
   overflow-x: hidden;
 }
 
-.font-serif-display {
-  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
-}
-
 /* Custom Scrollbars */
 html.dark ::-webkit-scrollbar-track {
-  background: #081d18;
+  background: #181714;
 }
 html.dark ::-webkit-scrollbar-thumb {
-  background: #1e4e42;
+  background: #3c3931;
 }
 
 html.light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f4f1ea;
 }
 html.light ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #dcd5c9;
 }
 
 ::-webkit-scrollbar {
@@ -70,5 +72,5 @@ html.light ::-webkit-scrollbar-thumb {
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #eb5e41;
+  background: #5b8056;
 }

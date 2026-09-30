@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, Loader2, XCircle, CircleDashed, Database, Sparkles, Sliders, LineChart } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle, CircleDashed, Database, Sparkles, Sliders, LineChart, Pause } from "lucide-react";
 import { RunStatus } from "../lib/types";
 import { useTheme } from "../lib/ThemeContext";
 
@@ -24,8 +24,9 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
 
   const getAgentStatus = (agentId: string) => {
     if (!lastAgent) {
-      if (agentId === AGENTS[0].id && (overallStatus === "running" || overallStatus === "pending")) {
-        return "running";
+      if (agentId === AGENTS[0].id) {
+        if (overallStatus === "paused") return "paused";
+        if (overallStatus === "running" || overallStatus === "pending") return "running";
       }
       return "waiting";
     }
@@ -33,7 +34,7 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
     const lastIdx = AGENTS.findIndex((a) => a.id === lastAgent);
     const currIdx = AGENTS.findIndex((a) => a.id === agentId);
 
-    if (overallStatus === "failed") {
+    if (overallStatus === "failed" || overallStatus === "cancelled") {
       if (currIdx < lastIdx) return "done";
       if (currIdx === lastIdx) return "failed";
       return "waiting";
@@ -43,63 +44,84 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
       return "done";
     }
 
+    if (overallStatus === "paused") {
+      if (currIdx < lastIdx) return "done";
+      if (currIdx === lastIdx) return "paused";
+      if (currIdx === lastIdx + 1) return "paused";
+      return "waiting";
+    }
+
     if (currIdx <= lastIdx) return "done";
     if (currIdx === lastIdx + 1 && overallStatus === "running") return "running";
     return "waiting";
   };
 
   return (
-    <div className={`border rounded-2xl p-4 md:p-5 shadow-md transition-colors ${
+    <div className={`border rounded-xl p-4 md:p-5 transition-colors ${
       isDark
-        ? "bg-[#12382f] border-[#1e4e42]"
-        : "bg-white border-slate-200 shadow-sm"
+        ? "bg-[#23221d] border-[#3c3931]"
+        : "bg-white border-[#dcd5c9]"
     }`}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className={`text-base font-bold tracking-tight flex items-center gap-2 font-serif-display ${
-            isDark ? "text-[#f4f3ee]" : "text-slate-900"
+          <h2 className={`text-base font-bold tracking-tight flex items-center gap-2 ${
+            isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"
           }`}>
             Multi-Agent Workflow Pipeline
-            <span className={`text-[10px] font-sans font-medium px-2 py-0.5 rounded-full border ${
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
               isDark
-                ? "bg-[#174337] text-[#eb5e41] border-[#286253]"
-                : "bg-orange-50 text-[#eb5e41] border-orange-200"
+                ? "bg-[#658a60]/20 text-[#8cb487] border-[#658a60]/30"
+                : "bg-[#658a60]/15 text-[#3f5f3b] border-[#658a60]/30"
             }`}>
               Autonomous DAG
             </span>
           </h2>
-          <p className={`text-xs mt-0.5 ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+          <p className={`text-xs mt-0.5 ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
             Collaborative execution across 4 specialized AI agent nodes
           </p>
         </div>
+
         {overallStatus === "running" && (
-          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full animate-pulse shadow-sm border ${
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
             isDark
-              ? "text-[#eb5e41] bg-[#174337] border-[#eb5e41]/60"
-              : "text-[#eb5e41] bg-orange-50 border-orange-200"
+              ? "text-[#f59e0b] bg-[#d97706]/20 border-[#d97706]/40"
+              : "text-[#b45309] bg-[#d97706]/15 border-[#d97706]/30"
           }`}>
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#eb5e41]" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#d97706]" />
             Execution Active
           </span>
         )}
-        {overallStatus === "done" && (
-          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${
+
+        {overallStatus === "paused" && (
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
             isDark
-              ? "text-[#34d399] bg-[#0f2e26] border-[#34d399]/40"
-              : "text-emerald-700 bg-emerald-50 border border-emerald-200"
+              ? "text-[#f59e0b] bg-[#d97706]/20 border-[#d97706]/40"
+              : "text-[#b45309] bg-[#d97706]/15 border-[#d97706]/30"
           }`}>
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#34d399]" />
+            <Pause className="w-3.5 h-3.5 text-[#d97706]" />
+            Execution Paused
+          </span>
+        )}
+
+        {overallStatus === "done" && (
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
+            isDark
+              ? "text-[#8cb487] bg-[#658a60]/20 border-[#658a60]/40"
+              : "text-[#3f5f3b] bg-[#658a60]/15 border-[#658a60]/30"
+          }`}>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#658a60]" />
             Pipeline Completed
           </span>
         )}
-        {overallStatus === "failed" && (
-          <span className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full shadow-sm border ${
+
+        {(overallStatus === "failed" || overallStatus === "cancelled") && (
+          <span className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md border ${
             isDark
-              ? "text-[#f87171] bg-[#2d1215] border-[#7f1d1d]/60"
-              : "text-rose-700 bg-rose-50 border border-rose-200"
+              ? "text-rose-400 bg-rose-950/40 border-rose-900/50"
+              : "text-rose-700 bg-rose-50 border-rose-200"
           }`}>
-            <XCircle className="w-3.5 h-3.5 text-[#f87171]" />
-            Stage Failed ({retryCount} retries)
+            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+            {overallStatus === "cancelled" ? "Cancelled by User" : `Stage Failed (${retryCount} retries)`}
           </span>
         )}
       </div>
@@ -115,19 +137,23 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
               className={`relative p-4 rounded-xl border transition-all flex flex-col justify-between ${
                 status === "running"
                   ? isDark
-                    ? "bg-[#174337] border-[#eb5e41] shadow-[0_0_15px_rgba(235,94,65,0.2)] ring-1 ring-[#eb5e41]/50"
-                    : "bg-orange-50/70 border-[#eb5e41] ring-1 ring-[#eb5e41]/40"
+                    ? "bg-[#2c2a24] border-[#d97706]/70 shadow-xs"
+                    : "bg-[#fffdfa] border-[#d97706] shadow-xs"
+                  : status === "paused"
+                  ? isDark
+                    ? "bg-[#2a261e] border-[#d97706]/50"
+                    : "bg-[#fefaf3] border-[#d97706]/40"
                   : status === "done"
                   ? isDark
-                    ? "bg-[#103027] border-[#1e4e42]"
-                    : "bg-slate-50 border-slate-200"
+                    ? "bg-[#23221d] border-[#3c3931]"
+                    : "bg-[#faf8f5] border-[#dcd5c9]"
                   : status === "failed"
                   ? isDark
-                    ? "bg-[#281316] border-[#7f1d1d]/60"
-                    : "bg-rose-50 border-rose-200"
+                    ? "bg-rose-950/40 border-rose-900/50"
+                    : "bg-rose-50/60 border-rose-200"
                   : isDark
-                  ? "bg-[#0d2822] border-[#1e4e42]/60 opacity-75"
-                  : "bg-slate-50/40 border-slate-200 opacity-60"
+                  ? "bg-[#181714] border-[#3c3931]"
+                  : "bg-[#f4efe6] border-[#dcd5c9]"
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -135,32 +161,39 @@ export default function PipelineStepper({ lastAgent, overallStatus, retryCount =
                   <div
                     className={`p-1.5 rounded-lg ${
                       status === "running"
-                        ? "bg-[#eb5e41] text-white shadow-sm"
+                        ? "bg-[#d97706] text-white"
+                        : status === "paused"
+                        ? isDark ? "bg-[#d97706]/30 text-[#f59e0b] border border-[#d97706]/40" : "bg-[#d97706]/20 text-[#b45309]"
                         : status === "done"
-                        ? isDark ? "bg-[#174337] text-[#34d399]" : "bg-emerald-100 text-emerald-700"
+                        ? isDark ? "bg-[#658a60]/30 text-[#8cb487] border border-[#658a60]/40" : "bg-[#658a60]/20 text-[#3f5f3b]"
                         : status === "failed"
-                        ? isDark ? "bg-[#3f161a] text-[#f87171]" : "bg-rose-100 text-rose-700"
-                        : isDark ? "bg-[#174337] text-[#6b9386]" : "bg-slate-200 text-slate-500"
+                        ? isDark ? "bg-rose-900/40 text-rose-300 border border-rose-800" : "bg-rose-100 text-rose-700"
+                        : isDark ? "bg-[#2c2a24] text-[#7a7469] border border-[#3c3931]" : "bg-[#dcd5c9] text-[#756e63]"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
-                  <span className="text-[11px] font-bold text-[#eb5e41]">Step 0{index + 1}</span>
+                  <span className={`text-[11px] font-bold ${
+                    status === "running" || status === "paused" ? "text-[#d97706]" : "text-[#658a60]"
+                  }`}>
+                    Step 0{index + 1}
+                  </span>
                 </div>
 
                 <div>
-                  {status === "done" && <CheckCircle2 className="w-4 h-4 text-[#34d399]" />}
-                  {status === "running" && <Loader2 className="w-4 h-4 text-[#eb5e41] animate-spin" />}
-                  {status === "failed" && <XCircle className="w-4 h-4 text-[#f87171]" />}
-                  {status === "waiting" && <CircleDashed className={`w-4 h-4 ${isDark ? "text-[#3d695d]" : "text-slate-300"}`} />}
+                  {status === "done" && <CheckCircle2 className="w-4 h-4 text-[#658a60]" />}
+                  {status === "running" && <Loader2 className="w-4 h-4 text-[#d97706] animate-spin" />}
+                  {status === "paused" && <Pause className="w-4 h-4 text-[#d97706]" />}
+                  {status === "failed" && <XCircle className="w-4 h-4 text-rose-500" />}
+                  {status === "waiting" && <CircleDashed className={`w-4 h-4 ${isDark ? "text-[#4a473d]" : "text-[#c8c0b2]"}`} />}
                 </div>
               </div>
 
               <div>
-                <h3 className={`text-xs font-bold ${isDark ? "text-[#f4f3ee]" : "text-slate-900"}`}>
+                <h3 className={`text-xs font-bold ${isDark ? "text-[#f4f1ea]" : "text-[#2d2925]"}`}>
                   {agent.label}
                 </h3>
-                <p className={`text-[11px] mt-0.5 leading-snug ${isDark ? "text-[#98bbaf]" : "text-slate-500"}`}>
+                <p className={`text-[11px] mt-0.5 leading-snug ${isDark ? "text-[#9a9386]" : "text-[#756e63]"}`}>
                   {agent.desc}
                 </p>
               </div>
